@@ -13,12 +13,13 @@
     <TextField fx:id="emailField" promptText="Email" />
     <PasswordField fx:id="passwordField" promptText="Пароль" />
     
-    <Button fx:id="loginButton" text="Увійти" styleClass="accent">
+    <Button fx:id="loginButton" text="Увійти" styleClass="accent" maxWidth="Infinity">
         <graphic>
-            <!-- Ikonli іконка для кнопки логіну -->
             <FontIcon iconLiteral="fas-sign-in-alt" />
         </graphic>
     </Button>
     
-    <Label fx:id="errorLabel" style="-fx-text-fill: red;" />
+    <Button text="Немає акаунту? Зареєструватись" styleClass="flat" maxWidth="Infinity" onAction="#navigateToRegister" />
+    
+    <Label fx:id="errorLabel" style="-fx-text-fill: -color-danger-fg;" />
 </VBox>

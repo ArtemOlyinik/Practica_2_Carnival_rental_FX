@@ -22,31 +22,40 @@ public class LoginController {
     @FXML private Button loginButton;
     @FXML private Label errorLabel;
 
-    private LoginViewModel viewModel;
-
-    // Ініціалізація ViewModel
-    public void setViewModel(LoginViewModel viewModel) {
-        this.viewModel = viewModel;
-        bindViewModel();
-    }
-
-    private void bindViewModel() {
-        emailField.textProperty().bindBidirectional(viewModel.emailProperty());
-        passwordField.textProperty().bindBidirectional(viewModel.passwordProperty());
-        errorLabel.textProperty().bind(viewModel.errorMessageProperty());
-
-        loginButton.setOnAction(e -> viewModel.attemptLogin());
-
-        viewModel.loginSuccessfulProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                navigateToCatalog();
-            }
-        });
-    }
+    private com.oliinyk.costumes.service.AuthService authService;
 
     @FXML
     public void initialize() {
-        // Залишено пустим, бо ініціалізація йде через setViewModel
+        authService = new com.oliinyk.costumes.service.AuthService(
+            new com.oliinyk.costumes.repository.JdbcUserRepository(),
+            new com.oliinyk.costumes.service.ConsoleEmailServiceImpl()
+        );
+        loginButton.setOnAction(e -> handleLogin());
+    }
+
+    private void handleLogin() {
+        String email = emailField.getText();
+        String password = passwordField.getText();
+
+        if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
+            errorLabel.setText("Введіть email та пароль.");
+            return;
+        }
+
+        java.util.Optional<com.oliinyk.costumes.model.User> userOpt = authService.login(email, password);
+
+        if (userOpt.isPresent()) {
+            com.oliinyk.costumes.model.User user = userOpt.get();
+            if (!user.isVerified()) {
+                errorLabel.setText("Акаунт не верифіковано.");
+                return;
+            }
+            com.oliinyk.costumes.service.SessionManager.getInstance().login(user);
+            errorLabel.setText("");
+            navigateToCatalog();
+        } else {
+            errorLabel.setText("Невірний email або пароль.");
+        }
     }
 
     private void navigateToCatalog() {
@@ -70,9 +79,20 @@ public class LoginController {
             stage.setResizable(true);
         } catch (Exception e) {
             e.printStackTrace();
-            if (viewModel != null) {
-                viewModel.errorMessageProperty().set("Помилка відкриття каталогу: " + e.getMessage());
-            }
+            errorLabel.setText("Помилка відкриття каталогу: " + e.getMessage());
+        }
+    }
+    @FXML
+    private void navigateToRegister() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegisterView.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            stage.setScene(new Scene(root, 400, 350));
+            stage.setTitle("Реєстрація");
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Помилка відкриття форми: " + e.getMessage());
         }
     }
 }

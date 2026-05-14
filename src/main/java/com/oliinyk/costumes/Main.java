@@ -52,9 +52,7 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(fxmlLocation);
         Parent root = loader.load();
 
-        // 5. Ін'єкція ViewModel у Controller
-        LoginController loginController = loader.getController();
-        loginController.setViewModel(loginViewModel);
+        // 5. Контролер сам керує своїм станом
 
         // 6. Відображення головного вікна
         primaryStage.setTitle("Карнавальні Костюми - Авторизація");
