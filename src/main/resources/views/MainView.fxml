@@ -7,38 +7,42 @@
 <BorderPane prefHeight="650.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oliinyk.costumes.view.MainController">
     <!-- Sidebar -->
     <left>
-        <VBox spacing="15" style="-fx-background-color: -color-bg-inset; -fx-padding: 20; -fx-border-color: transparent -color-border-default transparent transparent; -fx-border-width: 1; -fx-pref-width: 250;">
-            <Label text="Carnival" style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: -color-accent-emphasis;">
+        <VBox spacing="10" style="-fx-background-color: -color-bg-inset; -fx-padding: 25; -fx-border-color: transparent -color-border-default transparent transparent; -fx-border-width: 1;" prefWidth="280.0" minWidth="280.0" maxWidth="280.0">
+            <Label text="Carnival" style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-accent-emphasis;">
                 <graphic>
-                    <FontIcon iconLiteral="fas-mask" iconColor="#005fb8" />
+                    <FontIcon iconLiteral="fas-mask" iconSize="32" iconColor="#005fb8" />
                 </graphic>
+                <VBox.margin>
+                    <javafx.geometry.Insets bottom="20" />
+                </VBox.margin>
             </Label>
             
             <Separator />
             
             <Button fx:id="btnCatalog" text="Каталог" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showCatalog" styleClass="flat">
                 <graphic>
-                    <FontIcon iconLiteral="fas-list" />
+                    <FontIcon iconLiteral="fas-list" iconSize="16" />
                 </graphic>
+                <VBox.margin><javafx.geometry.Insets top="10"/></VBox.margin>
             </Button>
             <Button fx:id="btnBasket" text="Кошик" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showBasket" styleClass="flat">
                 <graphic>
-                    <FontIcon iconLiteral="fas-shopping-cart" />
+                    <FontIcon iconLiteral="fas-shopping-cart" iconSize="16" />
                 </graphic>
             </Button>
             <Button fx:id="btnMyRentals" text="Мої Оренди" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showMyRentals" styleClass="flat">
                 <graphic>
-                    <FontIcon iconLiteral="fas-history" />
+                    <FontIcon iconLiteral="fas-history" iconSize="16" />
                 </graphic>
             </Button>
             <Button fx:id="btnAdmin" text="Адмін Панель" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showAdminPanel" styleClass="flat">
                 <graphic>
-                    <FontIcon iconLiteral="fas-user-shield" />
+                    <FontIcon iconLiteral="fas-user-shield" iconSize="16" />
                 </graphic>
             </Button>
             <Button fx:id="btnSettings" text="Налаштування" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showSettings" styleClass="flat">
                 <graphic>
-                    <FontIcon iconLiteral="fas-cog" />
+                    <FontIcon iconLiteral="fas-cog" iconSize="16" />
                 </graphic>
             </Button>
             
@@ -46,7 +50,7 @@
             
             <Button text="Вийти" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#logout" styleClass="danger">
                 <graphic>
-                    <FontIcon iconLiteral="fas-sign-out-alt" />
+                    <FontIcon iconLiteral="fas-sign-out-alt" iconSize="16" />
                 </graphic>
             </Button>
         </VBox>

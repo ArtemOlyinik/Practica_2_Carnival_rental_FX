@@ -36,7 +36,9 @@ public class Main extends Application {
 
         // 4. Відображення головного вікна
         primaryStage.setTitle("Карнавальні Костюми - Авторизація");
-        primaryStage.setScene(new Scene(root, 400, 350));
+        primaryStage.setScene(new Scene(root, 450, 400));
+        primaryStage.setMinWidth(450);
+        primaryStage.setMinHeight(400);
         primaryStage.setResizable(false);
         primaryStage.show();
     }

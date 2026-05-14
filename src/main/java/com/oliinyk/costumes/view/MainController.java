@@ -30,9 +30,9 @@ public class MainController {
         btnAdmin.setVisible(isAdmin);
         btnAdmin.setManaged(isAdmin);
         
-        // "Мої оренди" доступні тільки звичайним користувачам (або всім, крім адміна)
-        btnMyRentals.setVisible(!isAdmin);
-        btnMyRentals.setManaged(!isAdmin);
+        // "Мої оренди" доступні всім ролям (Вимога UI/UX)
+        btnMyRentals.setVisible(true);
+        btnMyRentals.setManaged(true);
 
         showCatalog(); // Відкриваємо каталог при старті
     }

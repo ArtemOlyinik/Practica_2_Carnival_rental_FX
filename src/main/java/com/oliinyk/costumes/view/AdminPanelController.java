@@ -81,27 +81,33 @@ public class AdminPanelController {
                 param ->
                         new javafx.scene.control.TableCell<>() {
                             private final javafx.scene.control.Button editBtn =
-                                    new javafx.scene.control.Button("Редагувати");
+                                    new javafx.scene.control.Button();
                             private final javafx.scene.control.Button deleteBtn =
-                                    new javafx.scene.control.Button("Видалити");
+                                    new javafx.scene.control.Button();
                             private final javafx.scene.layout.HBox pane =
-                                    new javafx.scene.layout.HBox(5, editBtn, deleteBtn);
+                                    new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
 
                             {
-                                editBtn.getStyleClass().add("accent");
+                                editBtn.getStyleClass().addAll("button-icon", "accent");
+                                editBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-edit"));
+                                editBtn.setTooltip(new javafx.scene.control.Tooltip("Редагувати"));
                                 editBtn.setOnAction(
                                         event -> {
                                             Costume costume =
                                                     getTableView().getItems().get(getIndex());
                                             handleEditCostume(costume);
                                         });
-                                deleteBtn.getStyleClass().add("danger");
+
+                                deleteBtn.getStyleClass().addAll("button-icon", "danger");
+                                deleteBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-trash"));
+                                deleteBtn.setTooltip(new javafx.scene.control.Tooltip("Видалити"));
                                 deleteBtn.setOnAction(
                                         event -> {
                                             Costume costume =
                                                     getTableView().getItems().get(getIndex());
                                             handleDeleteCostume(costume);
                                         });
+                                pane.setAlignment(javafx.geometry.Pos.CENTER);
                             }
 
                             @Override
@@ -184,10 +190,36 @@ public class AdminPanelController {
                 (TableColumn<User, String>) usersTable.getColumns().get(2);
         verifiedCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().isVerified() ? "Так" : "Ні"));
+        verifiedCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String val, boolean empty) {
+                super.updateItem(val, empty);
+                if (empty || val == null) {
+                    setGraphic(null);
+                } else {
+                    javafx.scene.control.Label badge = new javafx.scene.control.Label(val);
+                    badge.getStyleClass().addAll("badge", "Так".equals(val) ? "success" : "subtle");
+                    setGraphic(badge);
+                }
+            }
+        });
 
         TableColumn<User, String> blockedCol = new TableColumn<>("Заблоковано");
         blockedCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().isBlocked() ? "Так" : "Ні"));
+        blockedCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String val, boolean empty) {
+                super.updateItem(val, empty);
+                if (empty || val == null) {
+                    setGraphic(null);
+                } else {
+                    javafx.scene.control.Label badge = new javafx.scene.control.Label(val);
+                    badge.getStyleClass().addAll("badge", "Так".equals(val) ? "danger" : "subtle");
+                    setGraphic(badge);
+                }
+            }
+        });
 
         TableColumn<User, Void> actionCol = new TableColumn<>("Дії");
         actionCol.setCellFactory(
@@ -197,6 +229,7 @@ public class AdminPanelController {
                                     new javafx.scene.control.Button();
 
                             {
+                                blockBtn.getStyleClass().add("button-icon");
                                 blockBtn.setOnAction(
                                         event -> {
                                             User user = getTableView().getItems().get(getIndex());
@@ -211,9 +244,15 @@ public class AdminPanelController {
                                     setGraphic(null);
                                 } else {
                                     User user = getTableView().getItems().get(getIndex());
-                                    blockBtn.setText(user.isBlocked() ? "Розблокувати" : "Блокувати");
-                                    blockBtn.getStyleClass()
-                                            .setAll(user.isBlocked() ? "success" : "danger");
+                                    if (user.isBlocked()) {
+                                        blockBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-lock-open"));
+                                        blockBtn.getStyleClass().setAll("button-icon", "success");
+                                        blockBtn.setTooltip(new javafx.scene.control.Tooltip("Розблокувати"));
+                                    } else {
+                                        blockBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-lock"));
+                                        blockBtn.getStyleClass().setAll("button-icon", "danger");
+                                        blockBtn.setTooltip(new javafx.scene.control.Tooltip("Заблокувати"));
+                                    }
                                     setGraphic(blockBtn);
                                 }
                             }
@@ -248,6 +287,29 @@ public class AdminPanelController {
                 (TableColumn<RentalDTO, String>) rentalsTable.getColumns().get(3);
         statusCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getStatus()));
+        statusCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    javafx.scene.control.Label badge = new javafx.scene.control.Label();
+                    if ("ACTIVE".equals(status)) {
+                        badge.setText("Активна");
+                        badge.getStyleClass().addAll("badge", "accent");
+                    } else if ("COMPLETED".equals(status)) {
+                        badge.setText("Завершена");
+                        badge.getStyleClass().addAll("badge", "success");
+                    } else {
+                        badge.setText(status);
+                        badge.getStyleClass().add("badge");
+                    }
+                    setGraphic(badge);
+                }
+            }
+        });
 
         TableColumn<RentalDTO, String> totalCol =
                 (TableColumn<RentalDTO, String>) rentalsTable.getColumns().get(4);
@@ -263,10 +325,12 @@ public class AdminPanelController {
                 param ->
                         new javafx.scene.control.TableCell<>() {
                             private final javafx.scene.control.Button completeBtn =
-                                    new javafx.scene.control.Button("Завершити");
+                                    new javafx.scene.control.Button();
 
                             {
-                                completeBtn.getStyleClass().add("success");
+                                completeBtn.getStyleClass().addAll("button-icon", "success");
+                                completeBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-check"));
+                                completeBtn.setTooltip(new javafx.scene.control.Tooltip("Завершити оренду"));
                                 completeBtn.setOnAction(
                                         event -> {
                                             RentalDTO rental =

@@ -49,8 +49,32 @@ public class MyRentalsController {
                 data -> new SimpleStringProperty(data.getValue().getStartDate().toString()));
         endCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getEndDate().toString()));
-        statusCol.setCellValueFactory(
-                data -> new SimpleStringProperty(data.getValue().getStatus()));
+        
+        statusCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
+        statusCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                if (empty || status == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    javafx.scene.control.Label badge = new javafx.scene.control.Label();
+                    if ("ACTIVE".equals(status)) {
+                        badge.setText("Активна");
+                        badge.getStyleClass().addAll("badge", "accent");
+                    } else if ("COMPLETED".equals(status)) {
+                        badge.setText("Завершена");
+                        badge.getStyleClass().addAll("badge", "success");
+                    } else {
+                        badge.setText(status);
+                        badge.getStyleClass().add("badge");
+                    }
+                    setGraphic(badge);
+                }
+            }
+        });
+
         totalCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getTotalPrice().toString() + " грн"));
     }

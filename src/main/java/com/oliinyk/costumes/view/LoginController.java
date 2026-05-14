@@ -82,9 +82,12 @@ public class LoginController {
 
             // Заміна сцени на тому ж Stage
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 1000, 650));
+            stage.setScene(new Scene(root, 1200, 800));
+            stage.setMinWidth(1100);
+            stage.setMinHeight(750);
             stage.setTitle("Карнавальні Костюми");
             stage.setResizable(true);
+            stage.centerOnScreen();
         } catch (Exception e) {
             e.printStackTrace();
             errorLabel.setText("Помилка відкриття каталогу: " + e.getMessage());
@@ -97,7 +100,7 @@ public class LoginController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegisterView.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 350));
+            stage.setScene(new Scene(root, 450, 400));
             stage.setTitle("Реєстрація");
         } catch (Exception e) {
             e.printStackTrace();
