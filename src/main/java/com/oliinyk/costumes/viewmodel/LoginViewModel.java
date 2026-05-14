@@ -6,6 +6,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+/**
+ * ViewModel для вікна входу в систему. Забезпечує зв'язок між інтерфейсом користувача та сервісом
+ * аутентифікації.
+ */
 public class LoginViewModel {
 
     private final AuthService authService;
@@ -15,26 +19,55 @@ public class LoginViewModel {
     private final StringProperty errorMessage = new SimpleStringProperty("");
     private final BooleanProperty loginSuccessful = new SimpleBooleanProperty(false);
 
+    /**
+     * Конструктор ViewModel для входу.
+     *
+     * @param authService сервіс аутентифікації для перевірки даних
+     */
     public LoginViewModel(AuthService authService) {
         this.authService = authService;
     }
 
+    /**
+     * Повертає властивість для поля електронної пошти.
+     *
+     * @return StringProperty для email
+     */
     public StringProperty emailProperty() {
         return email;
     }
 
+    /**
+     * Повертає властивість для поля пароля.
+     *
+     * @return StringProperty для пароля
+     */
     public StringProperty passwordProperty() {
         return password;
     }
 
+    /**
+     * Повертає властивість для повідомлення про помилку.
+     *
+     * @return StringProperty для тексту помилки
+     */
     public StringProperty errorMessageProperty() {
         return errorMessage;
     }
 
+    /**
+     * Повертає властивість, що вказує на успішність входу.
+     *
+     * @return BooleanProperty успішності входу
+     */
     public BooleanProperty loginSuccessfulProperty() {
         return loginSuccessful;
     }
 
+    /**
+     * Здійснює спробу входу в систему. Перевіряє введені дані та оновлює статус входу або
+     * повідомлення про помилку.
+     */
     public void attemptLogin() {
         if (email.get() == null || email.get().isEmpty()) {
             errorMessage.set("Email не може бути порожнім");

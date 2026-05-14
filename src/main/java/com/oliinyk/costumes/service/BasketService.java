@@ -15,32 +15,54 @@ public class BasketService {
         private static final BasketService INSTANCE = new BasketService();
     }
 
-    /** Отримати екземпляр сервісу. */
+    /**
+     * Отримати єдиний екземпляр сервісу (Singleton).
+     *
+     * @return Екземпляр BasketService
+     */
     public static BasketService getInstance() {
         return Holder.INSTANCE;
     }
 
-    /** Додати костюм до кошика. */
+    /**
+     * Додати костюм до кошика.
+     *
+     * @param costume Костюм, який потрібно додати
+     */
     public void addItem(Costume costume) {
         items.add(costume);
     }
 
-    /** Видалити костюм з кошика. */
+    /**
+     * Видалити костюм з кошика.
+     *
+     * @param costume Костюм, який потрібно видалити
+     */
     public void removeItem(Costume costume) {
         items.remove(costume);
     }
 
-    /** Отримати копію списку костюмів у кошику. */
+    /**
+     * Отримати список усіх костюмів у кошику.
+     *
+     * @return Список костюмів
+     */
     public List<Costume> getItems() {
         return new ArrayList<>(items);
     }
 
-    /** Очистити кошик. */
+    /** Очистити кошик від усіх елементів. */
     public void clear() {
         items.clear();
     }
 
-    /** Розрахувати загальну вартість оренди для всіх елементів у кошику (без застави). */
+    /**
+     * Розрахувати загальну вартість оренди для всіх елементів у кошику. Враховує кількість днів та
+     * можливі знижки за тривалість оренди.
+     *
+     * @param days Кількість днів оренди
+     * @return Загальна вартість оренди
+     */
     public BigDecimal calculateRentalTotal(long days) {
         BigDecimal total = BigDecimal.ZERO;
         for (Costume item : items) {
@@ -55,7 +77,11 @@ public class BasketService {
         return total;
     }
 
-    /** Розрахувати загальну суму застави. */
+    /**
+     * Розрахувати загальну суму застави для всіх костюмів у кошику.
+     *
+     * @return Загальна сума застави
+     */
     public BigDecimal calculateTotalDeposit() {
         BigDecimal total = BigDecimal.ZERO;
         for (Costume item : items) {
@@ -68,7 +94,12 @@ public class BasketService {
         return total;
     }
 
-    /** Розрахувати знижку. */
+    /**
+     * Розрахувати суму знижки залежно від кількості днів оренди.
+     *
+     * @param days Кількість днів оренди
+     * @return Сума знижки
+     */
     public BigDecimal calculateDiscount(long days) {
         if (days < 3) return BigDecimal.ZERO;
 

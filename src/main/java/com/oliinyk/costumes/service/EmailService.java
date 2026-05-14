@@ -1,6 +1,12 @@
 package com.oliinyk.costumes.service;
 
+/** Інтерфейс сервісу для відправки електронної пошти. */
 public interface EmailService {
-    // Відправка листа для верифікації
+    /**
+     * Відправити лист для верифікації електронної адреси користувача.
+     *
+     * @param email Адреса отримувача
+     * @param verificationCode Код підтвердження
+     */
     void sendVerificationEmail(String email, String verificationCode);
 }

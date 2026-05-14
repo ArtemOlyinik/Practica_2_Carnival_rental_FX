@@ -30,16 +30,23 @@ public class BasketViewModel {
     private final StringProperty depositTotal = new SimpleStringProperty("0.00 грн");
     private final StringProperty discountAmount = new SimpleStringProperty("0.00 грн");
 
+    /**
+     * Конструктор ViewModel кошика.
+     *
+     * @param rentalFacade фасад для оформлення оренди
+     */
     public BasketViewModel(RentalFacade rentalFacade) {
         this.rentalFacade = rentalFacade;
         refresh();
     }
 
+    /** Оновлює список елементів у кошику та перераховує вартість. */
     public void refresh() {
         items.setAll(basketService.getItems());
         recalculate();
     }
 
+    /** Перераховує загальну вартість оренди, заставу та знижку на основі вибраних дат. */
     public void recalculate() {
         if (startDate.get() != null && endDate.get() != null) {
             long days = ChronoUnit.DAYS.between(startDate.get(), endDate.get());
@@ -55,6 +62,11 @@ public class BasketViewModel {
         }
     }
 
+    /**
+     * Оформлює замовлення (checkout). Створює записи про оренду в базі даних та очищує кошик.
+     *
+     * @throws IllegalStateException якщо користувач не авторизований або кошик порожній
+     */
     public void checkout() {
         User user = SessionManager.getInstance().getCurrentUser();
         if (user == null) {
@@ -69,42 +81,78 @@ public class BasketViewModel {
         refresh();
     }
 
+    /**
+     * @return ObservableList елементів у кошику
+     */
     public ObservableList<Costume> getItems() {
         return items;
     }
 
+    /**
+     * @return властивість дати початку оренди
+     */
     public ObjectProperty<LocalDate> startDateProperty() {
         return startDate;
     }
 
+    /**
+     * @return властивість дати завершення оренди
+     */
     public ObjectProperty<LocalDate> endDateProperty() {
         return endDate;
     }
 
+    /**
+     * @return властивість загальної вартості
+     */
     public StringProperty totalPriceProperty() {
         return totalPrice;
     }
 
+    /**
+     * @return властивість загальної суми застави
+     */
     public StringProperty depositTotalProperty() {
         return depositTotal;
     }
 
+    /**
+     * @return властивість суми знижки
+     */
     public StringProperty discountAmountProperty() {
         return discountAmount;
     }
 
+    /**
+     * @return копія списку елементів у кошику
+     */
     public List<Costume> getItemsSnapshot() {
         return basketService.getItems();
     }
 
+    /**
+     * Розраховує вартість оренди для вказаної кількості днів.
+     *
+     * @param days кількість днів оренди
+     * @return сума вартості оренди
+     */
     public BigDecimal getRentalTotal(long days) {
         return basketService.calculateRentalTotal(days);
     }
 
+    /**
+     * @return сумарна сума застави за всі предмети
+     */
     public BigDecimal getTotalDeposit() {
         return basketService.calculateTotalDeposit();
     }
 
+    /**
+     * Розраховує суму знижки.
+     *
+     * @param days кількість днів оренди
+     * @return сума знижки
+     */
     public BigDecimal getDiscount(long days) {
         return basketService.calculateDiscount(days);
     }

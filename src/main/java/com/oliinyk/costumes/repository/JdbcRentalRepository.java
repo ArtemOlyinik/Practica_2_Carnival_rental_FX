@@ -11,9 +11,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** JDBC реалізація репозиторію оренди. Підтримує транзакційність. */
+/**
+ * JDBC реалізація репозиторію оренди. Підтримує транзакційність та забезпечує взаємодію з таблицею
+ * rentals.
+ */
 public class JdbcRentalRepository implements RentalRepository {
 
+    /**
+     * Зберігає нову оренду в базі даних. Створює нове з'єднання для виконання операції.
+     *
+     * @param rental об'єкт оренди для збереження
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(Rental rental) {
         try (Connection conn = DatabaseManager.getConnection()) {
@@ -23,6 +32,13 @@ public class JdbcRentalRepository implements RentalRepository {
         }
     }
 
+    /**
+     * Зберігає оренду в межах існуючої транзакції.
+     *
+     * @param rental об'єкт оренди для збереження
+     * @param conn існуюче SQL з'єднання
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(Rental rental, Connection conn) {
         String sql =
@@ -41,6 +57,13 @@ public class JdbcRentalRepository implements RentalRepository {
         }
     }
 
+    /**
+     * Знаходить оренду за її ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор оренди
+     * @return Optional з орендою, якщо знайдено, або порожній Optional
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public Optional<Rental> findById(UUID id) {
         String sql = "SELECT * FROM rentals WHERE id = ?";
@@ -58,6 +81,12 @@ public class JdbcRentalRepository implements RentalRepository {
         return Optional.empty();
     }
 
+    /**
+     * Повертає список усіх оренд з бази даних.
+     *
+     * @return список усіх оренд
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public List<Rental> findAll() {
         String sql = "SELECT * FROM rentals";
@@ -74,6 +103,13 @@ public class JdbcRentalRepository implements RentalRepository {
         return rentals;
     }
 
+    /**
+     * Знаходить усі оренди конкретного користувача.
+     *
+     * @param userId унікальний ідентифікатор користувача
+     * @return список оренд користувача
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public List<Rental> findByUserId(UUID userId) {
         String sql = "SELECT * FROM rentals WHERE user_id = ?";
@@ -92,6 +128,12 @@ public class JdbcRentalRepository implements RentalRepository {
         return rentals;
     }
 
+    /**
+     * Оновлює дані існуючої оренди в базі даних.
+     *
+     * @param rental об'єкт оренди з оновленими даними
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void update(Rental rental) {
         String sql =
@@ -111,6 +153,12 @@ public class JdbcRentalRepository implements RentalRepository {
         }
     }
 
+    /**
+     * Видаляє оренду за її ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор оренди для видалення
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void delete(UUID id) {
         String sql = "DELETE FROM rentals WHERE id = ?";
@@ -123,11 +171,22 @@ public class JdbcRentalRepository implements RentalRepository {
         }
     }
 
+    /**
+     * Перевіряє, чи доступний костюм для оренди на вказаний період. Костюм вважається зайнятим,
+     * якщо він є в активній оренді або резерві, що перетинається з вказаними датами.
+     *
+     * @param costumeId унікальний ідентифікатор костюма
+     * @param start дата початку бажаного періоду оренди
+     * @param end дата закінчення бажаного періоду оренди
+     * @return true, якщо костюм вільний, false — якщо зайнятий
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public boolean isCostumeAvailable(
             UUID costumeId, java.time.LocalDate start, java.time.LocalDate end) {
         // Умова перетину періодів [A, B] та [C, D]: A <= D AND B >= C
-        // Критичний баг 1: Костюм зайнятий, якщо статус ACTIVE, RESERVED, ISSUED або OVERDUE (Вимога стабільності)
+        // Критичний баг 1: Костюм зайнятий, якщо статус ACTIVE, RESERVED, ISSUED або OVERDUE
+        // (Вимога стабільності)
         String sql =
                 "SELECT COUNT(*) FROM rentals r "
                         + "JOIN rental_items ri ON r.id = ri.rental_id "
@@ -149,6 +208,13 @@ public class JdbcRentalRepository implements RentalRepository {
         return false;
     }
 
+    /**
+     * Перетворює рядок ResultSet у об'єкт Rental.
+     *
+     * @param rs ResultSet з результатами запиту
+     * @return об'єкт Rental
+     * @throws SQLException якщо виникла помилка при читанні з ResultSet
+     */
     private Rental mapResultSetToRental(ResultSet rs) throws SQLException {
         return Rental.builder()
                 .id(rs.getObject("id", UUID.class))

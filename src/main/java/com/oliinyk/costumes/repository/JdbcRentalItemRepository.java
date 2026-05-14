@@ -10,9 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/** JDBC реалізація репозиторію елементів оренди. Підтримує транзакційність. */
+/**
+ * JDBC реалізація репозиторію елементів оренди. Підтримує транзакційність та забезпечує взаємодію з
+ * таблицею rental_items.
+ */
 public class JdbcRentalItemRepository implements RentalItemRepository {
 
+    /**
+     * Зберігає новий елемент оренди в базі даних. Створює нове з'єднання для виконання операції.
+     *
+     * @param item об'єкт елемента оренди для збереження
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(RentalItem item) {
         try (Connection conn = DatabaseManager.getConnection()) {
@@ -22,6 +31,13 @@ public class JdbcRentalItemRepository implements RentalItemRepository {
         }
     }
 
+    /**
+     * Зберігає елемент оренди в межах існуючої транзакції.
+     *
+     * @param item об'єкт елемента оренди для збереження
+     * @param conn існуюче SQL з'єднання
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(RentalItem item, Connection conn) {
         String sql =
@@ -36,6 +52,13 @@ public class JdbcRentalItemRepository implements RentalItemRepository {
         }
     }
 
+    /**
+     * Знаходить усі елементи для конкретної оренди за її ідентифікатором.
+     *
+     * @param rentalId унікальний ідентифікатор оренди
+     * @return список елементів оренди
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public List<RentalItem> findByRentalId(UUID rentalId) {
         String sql = "SELECT * FROM rental_items WHERE rental_id = ?";
@@ -54,6 +77,13 @@ public class JdbcRentalItemRepository implements RentalItemRepository {
         return items;
     }
 
+    /**
+     * Перетворює рядок ResultSet у об'єкт RentalItem.
+     *
+     * @param rs ResultSet з результатами запиту
+     * @return об'єкт RentalItem
+     * @throws SQLException якщо виникла помилка при читанні з ResultSet
+     */
     private RentalItem mapResultSetToRentalItem(ResultSet rs) throws SQLException {
         return RentalItem.builder()
                 .rentalId(rs.getObject("rental_id", UUID.class))

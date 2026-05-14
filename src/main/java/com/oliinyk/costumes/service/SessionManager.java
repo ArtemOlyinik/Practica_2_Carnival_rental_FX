@@ -17,42 +17,72 @@ public class SessionManager {
         private static final SessionManager INSTANCE = new SessionManager();
     }
 
-    /** Отримати екземпляр менеджера. */
+    /**
+     * Отримати єдиний екземпляр менеджера сесії (Singleton).
+     *
+     * @return Екземпляр SessionManager
+     */
     public static SessionManager getInstance() {
         return Holder.INSTANCE;
     }
 
-    /** Увійти в систему. */
+    /**
+     * Встановити поточного користувача після успішного входу.
+     *
+     * @param user Об'єкт авторизованого користувача
+     */
     public void login(User user) {
         this.currentUser = user;
     }
 
-    /** Вийти з системи. */
+    /** Очистити дані поточної сесії (вихід із системи). */
     public void logout() {
         this.currentUser = null;
     }
 
-    /** Отримати поточного користувача. */
+    /**
+     * Отримати дані поточного авторизованого користувача.
+     *
+     * @return Об'єкт User або null, якщо ніхто не увійшов
+     */
     public User getCurrentUser() {
         return currentUser;
     }
 
-    /** Перевірити, чи користувач авторизований. */
+    /**
+     * Перевірити, чи є активна сесія користувача.
+     *
+     * @return true, якщо користувач авторизований, інакше false
+     */
     public boolean isLoggedIn() {
         return currentUser != null;
     }
 
-    /** Перевірити, чи є поточний користувач адміністратором. */
+    /**
+     * Перевірити, чи має поточний користувач права адміністратора.
+     *
+     * @return true, якщо користувач адміністратор, інакше false
+     */
     public boolean isAdmin() {
         return isLoggedIn() && "ADMIN".equalsIgnoreCase(currentUser.getRole());
     }
 
-    /** Властивість режиму відображення каталогу (GRID/LIST). */
+    /**
+     * Властивість режиму відображення каталогу (GRID або LIST). Використовується для зв'язування з
+     * інтерфейсом JavaFX.
+     *
+     * @return Властивість viewMode
+     */
     public StringProperty viewModeProperty() {
         return viewMode;
     }
 
-    /** Властивість поточної теми (LIGHT/DARK). */
+    /**
+     * Властивість поточної теми додатку (LIGHT або DARK). Використовується для зв'язування з
+     * інтерфейсом JavaFX.
+     *
+     * @return Властивість theme
+     */
     public StringProperty themeProperty() {
         return theme;
     }

@@ -21,6 +21,12 @@ public class RentalService {
     private final RentalRepository rentalRepository;
     private final RentalItemRepository rentalItemRepository;
 
+    /**
+     * Конструктор для створення екземпляра сервісу оренди.
+     *
+     * @param rentalRepository Репозиторій для роботи з орендами
+     * @param rentalItemRepository Репозиторій для роботи з елементами оренди
+     */
     public RentalService(
             RentalRepository rentalRepository, RentalItemRepository rentalItemRepository) {
         this.rentalRepository = rentalRepository;
@@ -28,14 +34,17 @@ public class RentalService {
     }
 
     /**
-     * Оформлення нового замовлення (Checkout). Використовує транзакцію для збереження оренди та її
-     * елементів.
+     * Оформлення нового замовлення (Checkout). Використовує транзакцію для збереження інформації
+     * про оренду та її елементи.
      *
-     * @param user Користувач, який робить замовлення
-     * @param costumes Список обраних костюмів
+     * @param user Користувач, який оформлює замовлення
+     * @param costumes Список костюмів для оренди
      * @param startDate Дата початку оренди
-     * @param endDate Дата завершення оренди
-     * @return Створений об'єкт оренди
+     * @param endDate Дата закінчення оренди
+     * @return Об'єкт створеної оренди
+     * @throws IllegalArgumentException якщо дані некоректні або кошик порожній
+     * @throws IllegalStateException якщо один з костюмів недоступний на вказані дати
+     * @throws RuntimeException при помилках роботи з базою даних
      */
     public Rental checkout(
             User user, List<Costume> costumes, LocalDate startDate, LocalDate endDate) {
@@ -104,6 +113,13 @@ public class RentalService {
         }
     }
 
+    /**
+     * Розрахувати штраф за прострочення оренди.
+     *
+     * @param rental Об'єкт оренди
+     * @param costumes Список костюмів у цій оренді
+     * @return Сума нарахованого штрафу
+     */
     public BigDecimal calculatePenalty(Rental rental, List<Costume> costumes) {
         if (rental.getEndDate().isAfter(LocalDate.now())) {
             return BigDecimal.ZERO;
@@ -120,7 +136,13 @@ public class RentalService {
         return dailyRate.multiply(BigDecimal.valueOf(overdueDays));
     }
 
-    /** Оновлення статусу оренди з перевіркою прострочки. */
+    /**
+     * Оновлення статусу оренди з автоматичною перевіркою прострочки та нарахуванням штрафу.
+     *
+     * @param rental Об'єкт оренди для оновлення
+     * @param newStatus Новий статус ("RETURNED", "CANCELLED" тощо)
+     * @param costumes Список костюмів, пов'язаних з орендою
+     */
     public void updateRentalStatus(Rental rental, String newStatus, List<Costume> costumes) {
         if ("RETURNED".equals(newStatus)) {
             BigDecimal penalty = calculatePenalty(rental, costumes);

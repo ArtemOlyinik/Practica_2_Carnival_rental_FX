@@ -1,7 +1,14 @@
 package com.oliinyk.costumes.service;
 
+/** Реалізація сервісу EmailService, яка виводить повідомлення в консоль (для тестування). */
 public class ConsoleEmailServiceImpl implements EmailService {
 
+    /**
+     * "Відправляє" лист, виводячи його вміст у системну консоль.
+     *
+     * @param email Адреса отримувача
+     * @param verificationCode Код підтвердження
+     */
     @Override
     public void sendVerificationEmail(String email, String verificationCode) {
         // Симуляція відправки email через вивід у консоль

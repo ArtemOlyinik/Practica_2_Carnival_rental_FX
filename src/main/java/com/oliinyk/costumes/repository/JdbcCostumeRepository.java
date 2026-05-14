@@ -11,9 +11,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** JDBC реалізація репозиторію костюмів. */
+/** JDBC реалізація репозиторію костюмів. Забезпечує взаємодію з таблицею costumes у базі даних. */
 public class JdbcCostumeRepository implements CostumeRepository {
 
+    /**
+     * Зберігає новий костюм у базі даних.
+     *
+     * @param costume об'єкт костюма для збереження
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(Costume costume) {
         String sql =
@@ -33,6 +39,13 @@ public class JdbcCostumeRepository implements CostumeRepository {
         }
     }
 
+    /**
+     * Знаходить костюм за його ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор костюма
+     * @return Optional з костюмом, якщо знайдено, або порожній Optional
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public Optional<Costume> findById(UUID id) {
         String sql = "SELECT * FROM costumes WHERE id = ?";
@@ -50,6 +63,12 @@ public class JdbcCostumeRepository implements CostumeRepository {
         return Optional.empty();
     }
 
+    /**
+     * Повертає список усіх костюмів з бази даних.
+     *
+     * @return список усіх костюмів
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public List<Costume> findAll() {
         String sql = "SELECT * FROM costumes";
@@ -66,6 +85,12 @@ public class JdbcCostumeRepository implements CostumeRepository {
         return costumes;
     }
 
+    /**
+     * Оновлює дані існуючого костюма в базі даних.
+     *
+     * @param costume об'єкт костюма з оновленими даними
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void update(Costume costume) {
         String sql =
@@ -85,6 +110,12 @@ public class JdbcCostumeRepository implements CostumeRepository {
         }
     }
 
+    /**
+     * Видаляє костюм за його ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор костюма для видалення
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void delete(UUID id) {
         String sql = "DELETE FROM costumes WHERE id = ?";
@@ -97,6 +128,13 @@ public class JdbcCostumeRepository implements CostumeRepository {
         }
     }
 
+    /**
+     * Перетворює рядок ResultSet у об'єкт Costume.
+     *
+     * @param rs ResultSet з результатами запиту
+     * @return об'єкт Costume
+     * @throws SQLException якщо виникла помилка при читанні з ResultSet
+     */
     private Costume mapResultSetToCostume(ResultSet rs) throws SQLException {
         return Costume.builder()
                 .id(rs.getObject("id", UUID.class))

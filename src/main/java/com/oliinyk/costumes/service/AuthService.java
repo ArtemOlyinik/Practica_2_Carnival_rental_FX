@@ -7,17 +7,35 @@ import java.util.Optional;
 import java.util.UUID;
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * Сервіс для аутентифікації та авторизації користувачів. Відповідає за реєстрацію, вхід та
+ * верифікацію акаунтів.
+ */
 public class AuthService {
 
     private final UserRepository userRepository;
     private final EmailService emailService;
 
+    /**
+     * Конструктор сервісу аутентифікації.
+     *
+     * @param userRepository репозиторій для роботи з користувачами
+     * @param emailService сервіс для відправки електронних листів
+     */
     public AuthService(UserRepository userRepository, EmailService emailService) {
         this.userRepository = userRepository;
         this.emailService = emailService;
     }
 
-    // Реєстрація нового користувача із хешуванням пароля (jBCrypt)
+    /**
+     * Реєстрація нового користувача із хешуванням пароля.
+     *
+     * @param email електронна пошта користувача
+     * @param rawPassword пароль у відкритому вигляді
+     * @param role роль користувача (наприклад, "USER" або "ADMIN")
+     * @return об'єкт створеного користувача
+     * @throws IllegalArgumentException якщо користувач із таким email вже існує
+     */
     public User registerUser(String email, String rawPassword, String role) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Користувач з таким email вже існує.");
@@ -46,7 +64,14 @@ public class AuthService {
         return newUser;
     }
 
-    // Авторизація користувача з перевіркою хешу
+    /**
+     * Авторизація користувача за email та паролем.
+     *
+     * @param email електронна пошта
+     * @param rawPassword пароль у відкритому вигляді
+     * @return Optional з об'єктом користувача, якщо авторизація успішна
+     * @throws RuntimeException якщо акаунт заблоковано
+     */
     public Optional<User> login(String email, String rawPassword) {
         Optional<User> userOpt = userRepository.findByEmail(email);
 
@@ -64,7 +89,13 @@ public class AuthService {
         return Optional.empty();
     }
 
-    // Підтвердження пошти користувача за допомогою коду
+    /**
+     * Підтвердження пошти користувача за допомогою коду верифікації.
+     *
+     * @param email електронна пошта користувача
+     * @param code код верифікації
+     * @return true, якщо верифікація пройшла успішно, інакше false
+     */
     public boolean verifyUser(String email, String code) {
         Optional<User> userOpt = userRepository.findByEmail(email);
 

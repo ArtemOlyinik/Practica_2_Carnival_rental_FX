@@ -24,6 +24,14 @@ public class RentalFacade {
     private final CostumeRepository costumeRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Конструктор фасаду.
+     *
+     * @param rentalService Сервіс оренди
+     * @param rentalRepository Репозиторій оренд
+     * @param costumeRepository Репозиторій костюмів
+     * @param userRepository Репозиторій користувачів
+     */
     public RentalFacade(
             RentalService rentalService,
             RentalRepository rentalRepository,
@@ -35,13 +43,26 @@ public class RentalFacade {
         this.userRepository = userRepository;
     }
 
-    /** Оформити замовлення та повернути DTO. */
+    /**
+     * Оформити замовлення та повернути об'єкт передачі даних (DTO).
+     *
+     * @param user Користувач
+     * @param costumes Список костюмів
+     * @param start Дата початку
+     * @param end Дата завершення
+     * @return Об'єкт RentalDTO з повною інформацією про оренду
+     */
     public RentalDTO checkout(User user, List<Costume> costumes, LocalDate start, LocalDate end) {
         Rental rental = rentalService.checkout(user, costumes, start, end);
         return mapToDTO(rental, costumes);
     }
 
-    /** Оновити статус оренди. */
+    /**
+     * Оновити статус оренди за її ідентифікатором.
+     *
+     * @param rentalId Унікальний ідентифікатор оренди
+     * @param newStatus Новий статус для встановлення
+     */
     public void updateStatus(UUID rentalId, String newStatus) {
         rentalRepository
                 .findById(rentalId)
@@ -52,7 +73,12 @@ public class RentalFacade {
                         });
     }
 
-    /** Отримати костюми для конкретної оренди. */
+    /**
+     * Отримати список костюмів, що входять до конкретної оренди.
+     *
+     * @param rentalId Унікальний ідентифікатор оренди
+     * @return Список об'єктів Costume
+     */
     public List<Costume> getCostumesByRentalId(UUID rentalId) {
         return new com.oliinyk.costumes.repository.JdbcRentalItemRepository()
                 .findByRentalId(rentalId).stream()
@@ -61,14 +87,23 @@ public class RentalFacade {
                         .collect(Collectors.toList());
     }
 
-    /** Отримати всі оренди у вигляді DTO для адмінки. */
+    /**
+     * Отримати всі оренди у системі у форматі DTO.
+     *
+     * @return Список усіх RentalDTO
+     */
     public List<RentalDTO> getAllRentals() {
         return rentalRepository.findAll().stream()
                 .map(r -> mapToDTO(r, getCostumesByRentalId(r.getId())))
                 .collect(Collectors.toList());
     }
 
-    /** Отримати оренди конкретного користувача. */
+    /**
+     * Отримати список оренд для конкретного користувача.
+     *
+     * @param userId Унікальний ідентифікатор користувача
+     * @return Список RentalDTO для вказаного користувача
+     */
     public List<RentalDTO> getRentalsByUserId(java.util.UUID userId) {
         return rentalRepository.findByUserId(userId).stream()
                 .map(r -> mapToDTO(r, getCostumesByRentalId(r.getId())))

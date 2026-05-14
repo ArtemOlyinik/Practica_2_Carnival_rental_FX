@@ -12,9 +12,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** JDBC реалізація репозиторію користувачів. */
+/** JDBC реалізація репозиторію користувачів. Забезпечує взаємодію з таблицею users у базі даних. */
 public class JdbcUserRepository implements UserRepository {
 
+    /**
+     * Зберігає нового користувача в базі даних.
+     *
+     * @param user об'єкт користувача для збереження
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void save(User user) {
         String sql =
@@ -39,6 +45,13 @@ public class JdbcUserRepository implements UserRepository {
         }
     }
 
+    /**
+     * Знаходить користувача за його ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор користувача
+     * @return Optional з користувачем, якщо знайдено, або порожній Optional
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public Optional<User> findById(UUID id) {
         String sql = "SELECT * FROM users WHERE id = ?";
@@ -56,6 +69,13 @@ public class JdbcUserRepository implements UserRepository {
         return Optional.empty();
     }
 
+    /**
+     * Знаходить користувача за його електронною поштою.
+     *
+     * @param email електронна пошта користувача
+     * @return Optional з користувачем, якщо знайдено, або порожній Optional
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public Optional<User> findByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
@@ -73,6 +93,12 @@ public class JdbcUserRepository implements UserRepository {
         return Optional.empty();
     }
 
+    /**
+     * Повертає список усіх користувачів з бази даних.
+     *
+     * @return список усіх користувачів
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public List<User> findAll() {
         String sql = "SELECT * FROM users";
@@ -89,6 +115,12 @@ public class JdbcUserRepository implements UserRepository {
         return users;
     }
 
+    /**
+     * Оновлює дані існуючого користувача в базі даних.
+     *
+     * @param user об'єкт користувача з оновленими даними
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void update(User user) {
         String sql =
@@ -108,6 +140,12 @@ public class JdbcUserRepository implements UserRepository {
         }
     }
 
+    /**
+     * Видаляє користувача за його ідентифікатором.
+     *
+     * @param id унікальний ідентифікатор користувача для видалення
+     * @throws RuntimeException якщо виникла помилка SQL під час виконання запиту
+     */
     @Override
     public void delete(UUID id) {
         String sql = "DELETE FROM users WHERE id = ?";
@@ -120,6 +158,13 @@ public class JdbcUserRepository implements UserRepository {
         }
     }
 
+    /**
+     * Перетворює рядок ResultSet у об'єкт User.
+     *
+     * @param rs ResultSet з результатами запиту
+     * @return об'єкт User
+     * @throws SQLException якщо виникла помилка при читанні з ResultSet
+     */
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         return User.builder()
                 .id(rs.getObject("id", UUID.class))

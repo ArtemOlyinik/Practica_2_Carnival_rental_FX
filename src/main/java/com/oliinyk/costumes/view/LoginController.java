@@ -20,51 +20,37 @@ public class LoginController {
     @FXML private Button loginButton;
     @FXML private Label errorLabel;
 
-    private com.oliinyk.costumes.service.AuthService authService;
+    private com.oliinyk.costumes.viewmodel.LoginViewModel viewModel;
 
     @FXML
     public void initialize() {
-        authService =
+        com.oliinyk.costumes.service.AuthService authService =
                 new com.oliinyk.costumes.service.AuthService(
                         new com.oliinyk.costumes.repository.JdbcUserRepository(),
                         new com.oliinyk.costumes.service.ConsoleEmailServiceImpl());
+
+        viewModel = new com.oliinyk.costumes.viewmodel.LoginViewModel(authService);
+
+        // Біндінг властивостей (Вимога 4.4.4)
+        emailField.textProperty().bindBidirectional(viewModel.emailProperty());
+        passwordField.textProperty().bindBidirectional(viewModel.passwordProperty());
+        errorLabel.textProperty().bind(viewModel.errorMessageProperty());
+
         loginButton.setOnAction(e -> handleLogin());
+
+        // Реакція на успішний вхід
+        viewModel
+                .loginSuccessfulProperty()
+                .addListener(
+                        (obs, old, success) -> {
+                            if (success) {
+                                navigateToCatalog();
+                            }
+                        });
     }
 
     private void handleLogin() {
-        String email = emailField.getText();
-        String password = passwordField.getText();
-
-        if (email == null || email.trim().isEmpty() || password == null || password.isEmpty()) {
-            errorLabel.setText("Введіть email та пароль.");
-            return;
-        }
-
-        try {
-            java.util.Optional<com.oliinyk.costumes.model.User> userOpt =
-                    authService.login(email, password);
-
-            if (userOpt.isPresent()) {
-                com.oliinyk.costumes.model.User user = userOpt.get();
-                if (!user.isVerified()) {
-                    errorLabel.setText("Акаунт не верифіковано.");
-                    return;
-                }
-                com.oliinyk.costumes.service.SessionManager.getInstance().login(user);
-                errorLabel.setText("");
-                navigateToCatalog();
-            } else {
-                errorLabel.setText("Невірний email або пароль.");
-            }
-        } catch (RuntimeException ex) {
-            errorLabel.setText(ex.getMessage());
-            javafx.scene.control.Alert alert =
-                    new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
-            alert.setTitle("Помилка входу");
-            alert.setHeaderText(null);
-            alert.setContentText(ex.getMessage());
-            alert.showAndWait();
-        }
+        viewModel.attemptLogin();
     }
 
     private void navigateToCatalog() {

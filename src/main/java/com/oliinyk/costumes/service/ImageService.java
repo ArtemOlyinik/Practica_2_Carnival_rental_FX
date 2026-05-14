@@ -13,6 +13,11 @@ public class ImageService {
 
     private static final String IMAGE_DIR = "app_data/images";
 
+    /**
+     * Конструктор сервісу. Створює директорію для збереження зображень, якщо вона не існує.
+     *
+     * @throws RuntimeException якщо не вдалося створити директорію
+     */
     public ImageService() {
         try {
             Files.createDirectories(Paths.get(IMAGE_DIR));
@@ -22,10 +27,11 @@ public class ImageService {
     }
 
     /**
-     * Копіює обраний файл у внутрішню директорію додатку.
+     * Копіює обраний файл зображення у внутрішню директорію додатку з унікальним ім'ям.
      *
-     * @param sourceFile Вихідний файл
-     * @return Відносний шлях до збереженого зображення
+     * @param sourceFile Вихідний файл зображення
+     * @return Відносний шлях до збереженого зображення у системі або null, якщо файл не вказано
+     * @throws RuntimeException при помилках копіювання файлу
      */
     public String saveImage(File sourceFile) {
         if (sourceFile == null) return null;

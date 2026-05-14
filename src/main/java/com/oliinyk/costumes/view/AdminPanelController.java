@@ -21,9 +21,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 
-import javafx.scene.chart.CategoryAxis;
-import javafx.util.StringConverter;
-
 /**
  * Контролер панелі адміністратора. Реалізує CRUD операції, асинхронне завантаження та фільтрацію
  * (Вимоги 5.1, 5.2, 4.4.5).
@@ -39,6 +36,8 @@ public class AdminPanelController {
 
     private final JdbcCostumeRepository costumeRepo = new JdbcCostumeRepository();
     private final JdbcUserRepository userRepo = new JdbcUserRepository();
+    private final com.oliinyk.costumes.service.ReportService reportService =
+            new com.oliinyk.costumes.service.ReportService();
     private RentalFacade rentalFacade;
 
     private ObservableList<Costume> costumesData = FXCollections.observableArrayList();
@@ -59,7 +58,8 @@ public class AdminPanelController {
         setupSearch();
 
         // Візуальний баг 1: Поворот тексту на осі X (Вимога UX)
-        javafx.scene.chart.CategoryAxis xAxis = (javafx.scene.chart.CategoryAxis) popularityChart.getXAxis();
+        javafx.scene.chart.CategoryAxis xAxis =
+                (javafx.scene.chart.CategoryAxis) popularityChart.getXAxis();
         xAxis.setTickLabelRotation(-45);
     }
 
@@ -189,7 +189,9 @@ public class AdminPanelController {
                                     costumeRepo.delete(costume.getId());
                                     loadDataAsync(); // Перезавантаження даних
                                 } catch (Exception e) {
-                                    // Критичний баг 2: Обробка SQLIntegrityConstraintViolationException (Вимога стабільності)
+                                    // Критичний баг 2: Обробка
+                                    // SQLIntegrityConstraintViolationException (Вимога
+                                    // стабільності)
                                     javafx.scene.control.Alert errorAlert =
                                             new javafx.scene.control.Alert(
                                                     javafx.scene.control.Alert.AlertType.ERROR);
@@ -459,6 +461,38 @@ public class AdminPanelController {
         rentalsTable.getColumns().addAll(penaltyCol, actionCol);
     }
 
+    @FXML
+    private void onExportRentalsClicked() {
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Зберегти звіт");
+        fileChooser
+                .getExtensionFilters()
+                .add(new javafx.stage.FileChooser.ExtensionFilter("CSV файли", "*.csv"));
+        fileChooser.setInitialFileName("rentals_report_" + java.time.LocalDate.now() + ".csv");
+
+        java.io.File file = fileChooser.showSaveDialog(rentalsTable.getScene().getWindow());
+        if (file != null) {
+            try {
+                reportService.exportRentalsToCsv(rentalsTable.getItems(), file);
+                javafx.scene.control.Alert alert =
+                        new javafx.scene.control.Alert(
+                                javafx.scene.control.Alert.AlertType.INFORMATION);
+                alert.setTitle("Успіх");
+                alert.setHeaderText(null);
+                alert.setContentText("Звіт успішно експортовано у " + file.getName());
+                alert.showAndWait();
+            } catch (java.io.IOException e) {
+                e.printStackTrace();
+                javafx.scene.control.Alert alert =
+                        new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+                alert.setTitle("Помилка");
+                alert.setHeaderText("Не вдалося зберегти файл");
+                alert.setContentText(e.getMessage());
+                alert.showAndWait();
+            }
+        }
+    }
+
     private void handleStatusChange(RentalDTO rentalDto, String newStatus) {
         rentalFacade.updateStatus(rentalDto.getId(), newStatus);
         loadDataAsync();
@@ -505,6 +539,14 @@ public class AdminPanelController {
                                         s -> s, java.util.stream.Collectors.counting()));
 
         popularityChart.getData().clear();
+        // Візуальний баг 1: Налізання тексту та баг кешування (Вимога UX)
+        javafx.scene.chart.CategoryAxis xAxis =
+                (javafx.scene.chart.CategoryAxis) popularityChart.getXAxis();
+        xAxis.getCategories().clear(); // Очищення кешу
+        xAxis.setAnimated(false); // Вимикаємо анімацію лише для осі X
+        xAxis.setTickLabelRotation(-45);
+        popularityChart.setAnimated(true); // Залишаємо загальну анімацію для стовпців
+
         javafx.scene.chart.XYChart.Series<String, Number> series =
                 new javafx.scene.chart.XYChart.Series<>();
         series.setName("Оренди");
@@ -516,7 +558,7 @@ public class AdminPanelController {
                             // Візуальний баг 1: Обрізання довгих назв (Вимога UX)
                             String name = entry.getKey();
                             String displayName =
-                                    name.length() > 15 ? name.substring(0, 15) + "..." : name;
+                                    name.length() > 12 ? name.substring(0, 12) + ".." : name;
                             series.getData()
                                     .add(
                                             new javafx.scene.chart.XYChart.Data<>(
