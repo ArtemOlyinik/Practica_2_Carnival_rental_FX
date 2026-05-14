@@ -16,9 +16,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+
+import javafx.scene.chart.CategoryAxis;
+import javafx.util.StringConverter;
 
 /**
  * Контролер панелі адміністратора. Реалізує CRUD операції, асинхронне завантаження та фільтрацію
@@ -30,6 +34,8 @@ public class AdminPanelController {
     @FXML private TableView<User> usersTable;
     @FXML private TableView<RentalDTO> rentalsTable;
     @FXML private TextField costumeSearchField;
+    @FXML private javafx.scene.chart.PieChart statusChart;
+    @FXML private javafx.scene.chart.BarChart<String, Number> popularityChart;
 
     private final JdbcCostumeRepository costumeRepo = new JdbcCostumeRepository();
     private final JdbcUserRepository userRepo = new JdbcUserRepository();
@@ -51,6 +57,10 @@ public class AdminPanelController {
         setupTables();
         loadDataAsync();
         setupSearch();
+
+        // Візуальний баг 1: Поворот тексту на осі X (Вимога UX)
+        javafx.scene.chart.CategoryAxis xAxis = (javafx.scene.chart.CategoryAxis) popularityChart.getXAxis();
+        xAxis.setTickLabelRotation(-45);
     }
 
     private void setupTables() {
@@ -72,7 +82,9 @@ public class AdminPanelController {
         TableColumn<Costume, String> priceCol =
                 (TableColumn<Costume, String>) costumesTable.getColumns().get(2);
         priceCol.setCellValueFactory(
-                data -> new SimpleStringProperty(data.getValue().getPricePerDay().toString()));
+                data ->
+                        new SimpleStringProperty(
+                                String.format("%.2f грн", data.getValue().getPricePerDay())));
 
         // Додавання кнопок дій (Вимога 5.1 CRUD)
         TableColumn<Costume, Void> actionCol =
@@ -88,8 +100,9 @@ public class AdminPanelController {
                                     new javafx.scene.layout.HBox(10, editBtn, deleteBtn);
 
                             {
-                                editBtn.getStyleClass().addAll("button-icon", "accent");
-                                editBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-edit"));
+                                editBtn.getStyleClass().addAll("button-icon", "flat", "accent");
+                                editBtn.setGraphic(
+                                        new org.kordamp.ikonli.javafx.FontIcon("fas-edit"));
                                 editBtn.setTooltip(new javafx.scene.control.Tooltip("Редагувати"));
                                 editBtn.setOnAction(
                                         event -> {
@@ -98,8 +111,9 @@ public class AdminPanelController {
                                             handleEditCostume(costume);
                                         });
 
-                                deleteBtn.getStyleClass().addAll("button-icon", "danger");
-                                deleteBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-trash"));
+                                deleteBtn.getStyleClass().addAll("button-icon", "flat", "danger");
+                                deleteBtn.setGraphic(
+                                        new org.kordamp.ikonli.javafx.FontIcon("fas-trash"));
                                 deleteBtn.setTooltip(new javafx.scene.control.Tooltip("Видалити"));
                                 deleteBtn.setOnAction(
                                         event -> {
@@ -171,8 +185,20 @@ public class AdminPanelController {
                 .ifPresent(
                         response -> {
                             if (response == javafx.scene.control.ButtonType.OK) {
-                                costumeRepo.delete(costume.getId());
-                                loadDataAsync(); // Перезавантаження даних
+                                try {
+                                    costumeRepo.delete(costume.getId());
+                                    loadDataAsync(); // Перезавантаження даних
+                                } catch (Exception e) {
+                                    // Критичний баг 2: Обробка SQLIntegrityConstraintViolationException (Вимога стабільності)
+                                    javafx.scene.control.Alert errorAlert =
+                                            new javafx.scene.control.Alert(
+                                                    javafx.scene.control.Alert.AlertType.ERROR);
+                                    errorAlert.setTitle("Помилка видалення");
+                                    errorAlert.setHeaderText(null);
+                                    errorAlert.setContentText(
+                                            "Неможливо видалити костюм, оскільки він присутній в історії оренд користувачів");
+                                    errorAlert.showAndWait();
+                                }
                             }
                         });
     }
@@ -190,36 +216,48 @@ public class AdminPanelController {
                 (TableColumn<User, String>) usersTable.getColumns().get(2);
         verifiedCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().isVerified() ? "Так" : "Ні"));
-        verifiedCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            @Override
-            protected void updateItem(String val, boolean empty) {
-                super.updateItem(val, empty);
-                if (empty || val == null) {
-                    setGraphic(null);
-                } else {
-                    javafx.scene.control.Label badge = new javafx.scene.control.Label(val);
-                    badge.getStyleClass().addAll("badge", "Так".equals(val) ? "success" : "subtle");
-                    setGraphic(badge);
-                }
-            }
-        });
+        verifiedCol.setCellFactory(
+                column ->
+                        new javafx.scene.control.TableCell<>() {
+                            @Override
+                            protected void updateItem(String val, boolean empty) {
+                                super.updateItem(val, empty);
+                                if (empty || val == null) {
+                                    setGraphic(null);
+                                } else {
+                                    javafx.scene.control.Label badge =
+                                            new javafx.scene.control.Label(val);
+                                    badge.getStyleClass()
+                                            .addAll(
+                                                    "badge",
+                                                    "Так".equals(val) ? "success" : "subtle");
+                                    setGraphic(badge);
+                                }
+                            }
+                        });
 
         TableColumn<User, String> blockedCol = new TableColumn<>("Заблоковано");
         blockedCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().isBlocked() ? "Так" : "Ні"));
-        blockedCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            @Override
-            protected void updateItem(String val, boolean empty) {
-                super.updateItem(val, empty);
-                if (empty || val == null) {
-                    setGraphic(null);
-                } else {
-                    javafx.scene.control.Label badge = new javafx.scene.control.Label(val);
-                    badge.getStyleClass().addAll("badge", "Так".equals(val) ? "danger" : "subtle");
-                    setGraphic(badge);
-                }
-            }
-        });
+        blockedCol.setCellFactory(
+                column ->
+                        new javafx.scene.control.TableCell<>() {
+                            @Override
+                            protected void updateItem(String val, boolean empty) {
+                                super.updateItem(val, empty);
+                                if (empty || val == null) {
+                                    setGraphic(null);
+                                } else {
+                                    javafx.scene.control.Label badge =
+                                            new javafx.scene.control.Label(val);
+                                    badge.getStyleClass()
+                                            .addAll(
+                                                    "badge",
+                                                    "Так".equals(val) ? "danger" : "subtle");
+                                    setGraphic(badge);
+                                }
+                            }
+                        });
 
         TableColumn<User, Void> actionCol = new TableColumn<>("Дії");
         actionCol.setCellFactory(
@@ -245,13 +283,23 @@ public class AdminPanelController {
                                 } else {
                                     User user = getTableView().getItems().get(getIndex());
                                     if (user.isBlocked()) {
-                                        blockBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-lock-open"));
-                                        blockBtn.getStyleClass().setAll("button-icon", "success");
-                                        blockBtn.setTooltip(new javafx.scene.control.Tooltip("Розблокувати"));
+                                        // Заблокований -> дія "Розблокувати" (Відкритий замок,
+                                        // зелений)
+                                        blockBtn.setGraphic(
+                                                new org.kordamp.ikonli.javafx.FontIcon(
+                                                        "fas-lock-open"));
+                                        blockBtn.getStyleClass()
+                                                .setAll("button-icon", "flat", "success");
+                                        blockBtn.setTooltip(
+                                                new javafx.scene.control.Tooltip("Розблокувати"));
                                     } else {
-                                        blockBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-lock"));
-                                        blockBtn.getStyleClass().setAll("button-icon", "danger");
-                                        blockBtn.setTooltip(new javafx.scene.control.Tooltip("Заблокувати"));
+                                        // Активний -> дія "Заблокувати" (Закритий замок, червоний)
+                                        blockBtn.setGraphic(
+                                                new org.kordamp.ikonli.javafx.FontIcon("fas-lock"));
+                                        blockBtn.getStyleClass()
+                                                .setAll("button-icon", "flat", "danger");
+                                        blockBtn.setTooltip(
+                                                new javafx.scene.control.Tooltip("Заблокувати"));
                                     }
                                     setGraphic(blockBtn);
                                 }
@@ -287,55 +335,112 @@ public class AdminPanelController {
                 (TableColumn<RentalDTO, String>) rentalsTable.getColumns().get(3);
         statusCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getStatus()));
-        statusCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            @Override
-            protected void updateItem(String status, boolean empty) {
-                super.updateItem(status, empty);
-                if (empty || status == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    javafx.scene.control.Label badge = new javafx.scene.control.Label();
-                    if ("ACTIVE".equals(status)) {
-                        badge.setText("Активна");
-                        badge.getStyleClass().addAll("badge", "accent");
-                    } else if ("COMPLETED".equals(status)) {
-                        badge.setText("Завершена");
-                        badge.getStyleClass().addAll("badge", "success");
-                    } else {
-                        badge.setText(status);
-                        badge.getStyleClass().add("badge");
-                    }
-                    setGraphic(badge);
-                }
-            }
-        });
+        statusCol.setCellFactory(
+                column ->
+                        new javafx.scene.control.TableCell<>() {
+                            @Override
+                            protected void updateItem(String status, boolean empty) {
+                                super.updateItem(status, empty);
+                                if (empty || status == null) {
+                                    setText(null);
+                                    setGraphic(null);
+                                } else {
+                                    javafx.scene.control.Label badge =
+                                            new javafx.scene.control.Label();
+                                    switch (status) {
+                                        case "RESERVED" -> {
+                                            badge.setText("Заброньовано");
+                                            badge.getStyleClass().addAll("badge", "accent");
+                                        }
+                                        case "ISSUED", "ACTIVE" -> {
+                                            badge.setText("Видано / Активна");
+                                            badge.getStyleClass().addAll("badge", "warning");
+                                        }
+                                        case "OVERDUE" -> {
+                                            badge.setText("Прострочено");
+                                            badge.getStyleClass().addAll("badge", "danger");
+                                        }
+                                        case "RETURNED", "COMPLETED" -> {
+                                            badge.setText("Повернуто / Завершена");
+                                            badge.getStyleClass().addAll("badge", "success");
+                                        }
+                                        default -> {
+                                            badge.setText(status);
+                                            badge.getStyleClass().add("badge");
+                                        }
+                                    }
+                                    setGraphic(badge);
+                                }
+                            }
+                        });
 
         TableColumn<RentalDTO, String> totalCol =
                 (TableColumn<RentalDTO, String>) rentalsTable.getColumns().get(4);
         totalCol.setCellValueFactory(
                 data ->
                         new SimpleStringProperty(
-                                data.getValue().getTotalPrice().toString() + " грн"));
+                                String.format("%.2f грн", data.getValue().getTotalPrice())));
 
-        // Додавання кнопок зміни статусу (Вимога 2.2 Admin Panel)
+        TableColumn<RentalDTO, String> penaltyCol = new TableColumn<>("Штраф");
+        penaltyCol.setCellValueFactory(
+                data ->
+                        new SimpleStringProperty(
+                                String.format("%.2f грн", data.getValue().getPenaltyAmount())));
+        penaltyCol.setPrefWidth(100);
+
+        // Додавання ComboBox для зміни статусу (Блок 2: Машина станів)
         TableColumn<RentalDTO, Void> actionCol = new TableColumn<>("Дії");
-        actionCol.setPrefWidth(150);
+        actionCol.setPrefWidth(220);
         actionCol.setCellFactory(
                 param ->
                         new javafx.scene.control.TableCell<>() {
-                            private final javafx.scene.control.Button completeBtn =
-                                    new javafx.scene.control.Button();
+                            private final ComboBox<String> statusCombo = new ComboBox<>();
 
                             {
-                                completeBtn.getStyleClass().addAll("button-icon", "success");
-                                completeBtn.setGraphic(new org.kordamp.ikonli.javafx.FontIcon("fas-check"));
-                                completeBtn.setTooltip(new javafx.scene.control.Tooltip("Завершити оренду"));
-                                completeBtn.setOnAction(
+                                statusCombo.getItems().addAll("RESERVED", "ISSUED", "RETURNED");
+                                statusCombo.getStyleClass().add("small");
+
+                                // UX баг 3: StringConverter для локалізації статусів (Вимога UX)
+                                statusCombo.setConverter(
+                                        new javafx.util.StringConverter<>() {
+                                            @Override
+                                            public String toString(String status) {
+                                                if (status == null) return "";
+                                                return switch (status) {
+                                                    case "RESERVED" -> "Заброньовано";
+                                                    case "ISSUED" -> "Видано";
+                                                    case "RETURNED" -> "Повернуто";
+                                                    case "ACTIVE" -> "Активна";
+                                                    case "COMPLETED" -> "Завершена";
+                                                    case "OVERDUE" -> "Прострочено";
+                                                    default -> status;
+                                                };
+                                            }
+
+                                            @Override
+                                            public String fromString(String string) {
+                                                if (string == null) return null;
+                                                return switch (string) {
+                                                    case "Заброньовано" -> "RESERVED";
+                                                    case "Видано" -> "ISSUED";
+                                                    case "Повернуто" -> "RETURNED";
+                                                    case "Активна" -> "ACTIVE";
+                                                    case "Завершена" -> "COMPLETED";
+                                                    case "Прострочено" -> "OVERDUE";
+                                                    default -> string;
+                                                };
+                                            }
+                                        });
+
+                                statusCombo.setOnAction(
                                         event -> {
                                             RentalDTO rental =
                                                     getTableView().getItems().get(getIndex());
-                                            handleStatusChange(rental, "COMPLETED");
+                                            String newValue = statusCombo.getValue();
+                                            if (newValue != null
+                                                    && !newValue.equals(rental.getStatus())) {
+                                                handleStatusChange(rental, newValue);
+                                            }
                                         });
                             }
 
@@ -346,27 +451,79 @@ public class AdminPanelController {
                                     setGraphic(null);
                                 } else {
                                     RentalDTO rental = getTableView().getItems().get(getIndex());
-                                    if ("ACTIVE".equals(rental.getStatus())) {
-                                        setGraphic(completeBtn);
-                                    } else {
-                                        setGraphic(null);
-                                    }
+                                    statusCombo.setValue(rental.getStatus());
+                                    setGraphic(statusCombo);
                                 }
                             }
                         });
-        rentalsTable.getColumns().add(actionCol);
+        rentalsTable.getColumns().addAll(penaltyCol, actionCol);
     }
 
     private void handleStatusChange(RentalDTO rentalDto, String newStatus) {
-        JdbcRentalRepository rentalRepo = new JdbcRentalRepository();
-        rentalRepo
-                .findById(rentalDto.getId())
-                .ifPresent(
-                        rental -> {
-                            rental.setStatus(newStatus);
-                            rentalRepo.update(rental);
-                            loadDataAsync();
+        rentalFacade.updateStatus(rentalDto.getId(), newStatus);
+        loadDataAsync();
+    }
+
+    private void updateCharts(List<RentalDTO> rentals) {
+        // Статистика за статусами (Блок 3: Дашборд)
+        java.util.Map<String, Long> statusCounts =
+                rentals.stream()
+                        .collect(
+                                java.util.stream.Collectors.groupingBy(
+                                        RentalDTO::getStatus,
+                                        java.util.stream.Collectors.counting()));
+
+        statusChart.getData().clear();
+        // Візуальний баг 3: Стабільний розмір (Вимога UX)
+        statusChart.setLabelsVisible(false);
+        statusChart.setLegendVisible(true);
+
+        statusCounts.forEach(
+                (status, count) -> {
+                    // UX баг 2: Локалізація в графіках (Вимога UX)
+                    String localizedStatus =
+                            switch (status) {
+                                case "RESERVED" -> "Заброньовано";
+                                case "ISSUED" -> "Видано";
+                                case "RETURNED" -> "Повернуто";
+                                case "COMPLETED" -> "Завершена";
+                                case "ACTIVE" -> "Активна";
+                                case "OVERDUE" -> "Прострочено";
+                                default -> status;
+                            };
+                    statusChart
+                            .getData()
+                            .add(new javafx.scene.chart.PieChart.Data(localizedStatus, count));
+                });
+
+        // Популярність костюмів (Топ-5)
+        java.util.Map<String, Long> costumePopularity =
+                rentals.stream()
+                        .flatMap(r -> r.getCostumeNames().stream())
+                        .collect(
+                                java.util.stream.Collectors.groupingBy(
+                                        s -> s, java.util.stream.Collectors.counting()));
+
+        popularityChart.getData().clear();
+        javafx.scene.chart.XYChart.Series<String, Number> series =
+                new javafx.scene.chart.XYChart.Series<>();
+        series.setName("Оренди");
+        costumePopularity.entrySet().stream()
+                .sorted(java.util.Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(5)
+                .forEach(
+                        entry -> {
+                            // Візуальний баг 1: Обрізання довгих назв (Вимога UX)
+                            String name = entry.getKey();
+                            String displayName =
+                                    name.length() > 15 ? name.substring(0, 15) + "..." : name;
+                            series.getData()
+                                    .add(
+                                            new javafx.scene.chart.XYChart.Data<>(
+                                                    displayName, entry.getValue()));
                         });
+
+        popularityChart.getData().add(series);
     }
 
     private void loadDataAsync() {
@@ -386,6 +543,8 @@ public class AdminPanelController {
                                     usersTable.setItems(FXCollections.observableArrayList(users));
                                     rentalsTable.setItems(
                                             FXCollections.observableArrayList(rentals));
+                                    // Наповнення графіків дашборду (Блок 3: Дашборд)
+                                    updateCharts(rentals);
                                 });
                         return null;
                     }

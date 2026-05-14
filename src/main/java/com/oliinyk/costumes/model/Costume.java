@@ -18,4 +18,5 @@ public class Costume {
     private String description;
     private String imagePath;
     private BigDecimal pricePerDay;
+    private BigDecimal depositAmount;
 }

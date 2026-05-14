@@ -20,6 +20,8 @@ public class RentalDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;
+    private BigDecimal penaltyAmount;
+    private BigDecimal totalDeposit;
     private String status;
     private List<String> costumeNames;
 }

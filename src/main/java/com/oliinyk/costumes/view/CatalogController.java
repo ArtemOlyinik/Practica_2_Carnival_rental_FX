@@ -45,7 +45,43 @@ public class CatalogController {
         startDatePicker.setValue(LocalDate.now());
         endDatePicker.setValue(LocalDate.now().plusDays(1));
 
-        startDatePicker.valueProperty().addListener((obs, old, newVal) -> refreshCatalog());
+        // Налаштування обмежень для дат (Вимога UI/UX)
+        startDatePicker.setDayCellFactory(
+                picker ->
+                        new DateCell() {
+                            @Override
+                            public void updateItem(LocalDate date, boolean empty) {
+                                super.updateItem(date, empty);
+                                setDisable(empty || date.isBefore(LocalDate.now()));
+                            }
+                        });
+
+        endDatePicker.setDayCellFactory(
+                picker ->
+                        new DateCell() {
+                            @Override
+                            public void updateItem(LocalDate date, boolean empty) {
+                                super.updateItem(date, empty);
+                                setDisable(
+                                        empty
+                                                || date.isBefore(
+                                                        startDatePicker.getValue().plusDays(1)));
+                            }
+                        });
+
+        startDatePicker
+                .valueProperty()
+                .addListener(
+                        (obs, old, newVal) -> {
+                            if (newVal != null
+                                    && (endDatePicker.getValue() == null
+                                            || endDatePicker
+                                                    .getValue()
+                                                    .isBefore(newVal.plusDays(1)))) {
+                                endDatePicker.setValue(newVal.plusDays(1));
+                            }
+                            refreshCatalog();
+                        });
         endDatePicker.valueProperty().addListener((obs, old, newVal) -> refreshCatalog());
 
         gridModeBtn.setOnAction(e -> SessionManager.getInstance().viewModeProperty().set("GRID"));
@@ -149,7 +185,7 @@ public class CatalogController {
                         imageView.setImage(new Image(file.toURI().toString(), true));
                     }
                 }
-                
+
                 imageView.setFitWidth("LIST".equals(viewMode) ? 80 : 150);
                 imageView.setFitHeight("LIST".equals(viewMode) ? 80 : 150);
                 imageView.setPreserveRatio(true);
@@ -158,7 +194,7 @@ public class CatalogController {
             }
         }
 
-        Label priceLabel = new Label(costume.getPricePerDay() + " грн/день");
+        Label priceLabel = new Label(String.format("%.2f", costume.getPricePerDay()) + " грн/день");
         priceLabel.setStyle(
                 "-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: -color-accent-emphasis;");
 

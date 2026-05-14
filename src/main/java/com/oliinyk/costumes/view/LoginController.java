@@ -83,8 +83,14 @@ public class LoginController {
             // Заміна сцени на тому ж Stage
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(root, 1200, 800));
-            stage.setMinWidth(1100);
-            stage.setMinHeight(750);
+
+            // Візуальний баг 3: Стиснутий Каталог по замовчуванню (Вимога UX)
+            stage.setMaximized(false);
+            stage.setWidth(1200);
+            stage.setHeight(800);
+            stage.setMinWidth(1000);
+            stage.setMinHeight(700);
+
             stage.setTitle("Карнавальні Костюми");
             stage.setResizable(true);
             stage.centerOnScreen();

@@ -7,8 +7,10 @@ import com.oliinyk.costumes.model.User;
 import com.oliinyk.costumes.repository.CostumeRepository;
 import com.oliinyk.costumes.repository.RentalRepository;
 import com.oliinyk.costumes.repository.UserRepository;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -36,36 +38,61 @@ public class RentalFacade {
     /** Оформити замовлення та повернути DTO. */
     public RentalDTO checkout(User user, List<Costume> costumes, LocalDate start, LocalDate end) {
         Rental rental = rentalService.checkout(user, costumes, start, end);
-        return mapToDTO(rental);
+        return mapToDTO(rental, costumes);
+    }
+
+    /** Оновити статус оренди. */
+    public void updateStatus(UUID rentalId, String newStatus) {
+        rentalRepository
+                .findById(rentalId)
+                .ifPresent(
+                        rental -> {
+                            List<Costume> costumes = getCostumesByRentalId(rentalId);
+                            rentalService.updateRentalStatus(rental, newStatus, costumes);
+                        });
+    }
+
+    /** Отримати костюми для конкретної оренди. */
+    public List<Costume> getCostumesByRentalId(UUID rentalId) {
+        return new com.oliinyk.costumes.repository.JdbcRentalItemRepository()
+                .findByRentalId(rentalId).stream()
+                        .map(item -> costumeRepository.findById(item.getCostumeId()).orElse(null))
+                        .filter(java.util.Objects::nonNull)
+                        .collect(Collectors.toList());
     }
 
     /** Отримати всі оренди у вигляді DTO для адмінки. */
     public List<RentalDTO> getAllRentals() {
-        return rentalRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
+        return rentalRepository.findAll().stream()
+                .map(r -> mapToDTO(r, getCostumesByRentalId(r.getId())))
+                .collect(Collectors.toList());
     }
 
     /** Отримати оренди конкретного користувача. */
     public List<RentalDTO> getRentalsByUserId(java.util.UUID userId) {
         return rentalRepository.findByUserId(userId).stream()
-                .map(this::mapToDTO)
+                .map(r -> mapToDTO(r, getCostumesByRentalId(r.getId())))
                 .collect(Collectors.toList());
     }
 
-    private RentalDTO mapToDTO(Rental rental) {
+    private RentalDTO mapToDTO(Rental rental, List<Costume> costumes) {
         String userEmail =
                 userRepository.findById(rental.getUserId()).map(User::getEmail).orElse("Unknown");
 
-        // Реальне отримання імен костюмів (Вимога 4.2.4 про Lazy Initialization)
-        List<String> names =
-                new com.oliinyk.costumes.repository.JdbcRentalItemRepository()
-                        .findByRentalId(rental.getId()).stream()
-                        .map(
-                                item ->
-                                        costumeRepository
-                                                .findById(item.getCostumeId())
-                                                .map(com.oliinyk.costumes.model.Costume::getName)
-                                                .orElse("Видалений костюм"))
-                        .collect(Collectors.toList());
+        BigDecimal currentPenalty = rental.getPenaltyAmount();
+        if (currentPenalty.compareTo(BigDecimal.ZERO) == 0
+                && !"RETURNED".equals(rental.getStatus())) {
+            currentPenalty = rentalService.calculatePenalty(rental, costumes);
+        }
+
+        BigDecimal totalDeposit = BigDecimal.ZERO;
+        for (Costume c : costumes) {
+            totalDeposit =
+                    totalDeposit.add(
+                            c.getDepositAmount() != null ? c.getDepositAmount() : BigDecimal.ZERO);
+        }
+
+        List<String> names = costumes.stream().map(Costume::getName).collect(Collectors.toList());
 
         return RentalDTO.builder()
                 .id(rental.getId())
@@ -74,6 +101,8 @@ public class RentalFacade {
                 .startDate(rental.getStartDate())
                 .endDate(rental.getEndDate())
                 .totalPrice(rental.getTotalPrice())
+                .penaltyAmount(currentPenalty)
+                .totalDeposit(totalDeposit)
                 .status(rental.getStatus())
                 .costumeNames(names)
                 .build();

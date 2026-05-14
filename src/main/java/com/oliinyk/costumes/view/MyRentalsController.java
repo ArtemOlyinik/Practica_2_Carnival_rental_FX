@@ -44,39 +44,47 @@ public class MyRentalsController {
 
     private void setupTable() {
         costumesCol.setCellValueFactory(
-                data -> new SimpleStringProperty(String.join(", ", data.getValue().getCostumeNames())));
+                data ->
+                        new SimpleStringProperty(
+                                String.join(", ", data.getValue().getCostumeNames())));
         startCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getStartDate().toString()));
         endCol.setCellValueFactory(
                 data -> new SimpleStringProperty(data.getValue().getEndDate().toString()));
-        
-        statusCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        statusCol.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            @Override
-            protected void updateItem(String status, boolean empty) {
-                super.updateItem(status, empty);
-                if (empty || status == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    javafx.scene.control.Label badge = new javafx.scene.control.Label();
-                    if ("ACTIVE".equals(status)) {
-                        badge.setText("Активна");
-                        badge.getStyleClass().addAll("badge", "accent");
-                    } else if ("COMPLETED".equals(status)) {
-                        badge.setText("Завершена");
-                        badge.getStyleClass().addAll("badge", "success");
-                    } else {
-                        badge.setText(status);
-                        badge.getStyleClass().add("badge");
-                    }
-                    setGraphic(badge);
-                }
-            }
-        });
+
+        statusCol.setCellValueFactory(
+                data -> new SimpleStringProperty(data.getValue().getStatus()));
+        statusCol.setCellFactory(
+                column ->
+                        new javafx.scene.control.TableCell<>() {
+                            @Override
+                            protected void updateItem(String status, boolean empty) {
+                                super.updateItem(status, empty);
+                                if (empty || status == null) {
+                                    setText(null);
+                                    setGraphic(null);
+                                } else {
+                                    javafx.scene.control.Label badge =
+                                            new javafx.scene.control.Label();
+                                    if ("ACTIVE".equals(status)) {
+                                        badge.setText("Активна");
+                                        badge.getStyleClass().addAll("badge", "accent");
+                                    } else if ("COMPLETED".equals(status)) {
+                                        badge.setText("Завершена");
+                                        badge.getStyleClass().addAll("badge", "success");
+                                    } else {
+                                        badge.setText(status);
+                                        badge.getStyleClass().add("badge");
+                                    }
+                                    setGraphic(badge);
+                                }
+                            }
+                        });
 
         totalCol.setCellValueFactory(
-                data -> new SimpleStringProperty(data.getValue().getTotalPrice().toString() + " грн"));
+                data ->
+                        new SimpleStringProperty(
+                                String.format("%.2f грн", data.getValue().getTotalPrice())));
     }
 
     private void loadDataAsync() {
@@ -91,7 +99,8 @@ public class MyRentalsController {
                     }
                 };
 
-        task.setOnSucceeded(e -> rentalsTable.setItems(FXCollections.observableArrayList(task.getValue())));
+        task.setOnSucceeded(
+                e -> rentalsTable.setItems(FXCollections.observableArrayList(task.getValue())));
         new Thread(task).start();
     }
 }

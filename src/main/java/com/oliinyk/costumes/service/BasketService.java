@@ -40,12 +40,44 @@ public class BasketService {
         items.clear();
     }
 
-    /** Розрахувати загальну вартість оренди для всіх елементів у кошику. */
-    public BigDecimal calculateTotal(long days) {
+    /** Розрахувати загальну вартість оренди для всіх елементів у кошику (без застави). */
+    public BigDecimal calculateRentalTotal(long days) {
         BigDecimal total = BigDecimal.ZERO;
         for (Costume item : items) {
             total = total.add(item.getPricePerDay());
         }
-        return total.multiply(BigDecimal.valueOf(days > 0 ? days : 1));
+        total = total.multiply(BigDecimal.valueOf(days > 0 ? days : 1));
+
+        // Логіка лояльності: знижка 10% при оренді від 3 днів (Блок 2)
+        if (days >= 3) {
+            total = total.multiply(new BigDecimal("0.90"));
+        }
+        return total;
+    }
+
+    /** Розрахувати загальну суму застави. */
+    public BigDecimal calculateTotalDeposit() {
+        BigDecimal total = BigDecimal.ZERO;
+        for (Costume item : items) {
+            total =
+                    total.add(
+                            item.getDepositAmount() != null
+                                    ? item.getDepositAmount()
+                                    : BigDecimal.ZERO);
+        }
+        return total;
+    }
+
+    /** Розрахувати знижку. */
+    public BigDecimal calculateDiscount(long days) {
+        if (days < 3) return BigDecimal.ZERO;
+
+        BigDecimal totalWithoutDiscount = BigDecimal.ZERO;
+        for (Costume item : items) {
+            totalWithoutDiscount = totalWithoutDiscount.add(item.getPricePerDay());
+        }
+        totalWithoutDiscount = totalWithoutDiscount.multiply(BigDecimal.valueOf(days));
+
+        return totalWithoutDiscount.multiply(new BigDecimal("0.10"));
     }
 }

@@ -26,11 +26,23 @@
             
             <Separator />
             
-            <HBox alignment="CENTER_LEFT">
-                <Label text="Загальна вартість:" style="-fx-font-size: 16;" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Label fx:id="totalPriceLabel" text="0 грн" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: -color-accent-emphasis;" />
-            </HBox>
+            <VBox spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Застава:" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="depositLabel" text="0 грн" style="-fx-font-weight: bold;" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Знижка:" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="discountLabel" text="0 грн" style="-fx-text-fill: -color-success-emphasis; -fx-font-weight: bold;" />
+                </HBox>
+                <HBox alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
+                    <Label text="Разом до сплати:" style="-fx-font-size: 16; -fx-font-weight: bold;" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Label fx:id="totalPriceLabel" text="0 грн" style="-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: -color-accent-emphasis;" />
+                </HBox>
+            </VBox>
             
             <Region VBox.vgrow="ALWAYS" />
             

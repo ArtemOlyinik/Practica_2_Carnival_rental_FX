@@ -17,13 +17,15 @@ public class CostumeDialogController {
     @FXML private TextField nameField;
     @FXML private TextArea descriptionArea;
     @FXML private TextField priceField;
+    @FXML private TextField depositField;
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private TextField imagePathField;
 
     private Costume costume;
     private boolean saveClicked = false;
     private final JdbcCategoryRepository categoryRepo = new JdbcCategoryRepository();
-    private final com.oliinyk.costumes.service.ImageService imageService = new com.oliinyk.costumes.service.ImageService();
+    private final com.oliinyk.costumes.service.ImageService imageService =
+            new com.oliinyk.costumes.service.ImageService();
 
     @FXML
     public void initialize() {
@@ -74,7 +76,14 @@ public class CostumeDialogController {
         if (costume != null) {
             nameField.setText(costume.getName());
             descriptionArea.setText(costume.getDescription());
-            priceField.setText(costume.getPricePerDay().toString());
+            priceField.setText(String.format("%.2f", costume.getPricePerDay()).replace(',', '.'));
+            depositField.setText(
+                    String.format(
+                                    "%.2f",
+                                    costume.getDepositAmount() != null
+                                            ? costume.getDepositAmount()
+                                            : BigDecimal.ZERO)
+                            .replace(',', '.'));
             imagePathField.setText(costume.getImagePath());
 
             categoryComboBox.getItems().stream()
@@ -96,6 +105,7 @@ public class CostumeDialogController {
         costume.setName(nameField.getText());
         costume.setDescription(descriptionArea.getText());
         costume.setPricePerDay(new BigDecimal(priceField.getText()));
+        costume.setDepositAmount(new BigDecimal(depositField.getText()));
         costume.setImagePath(imagePathField.getText());
         if (categoryComboBox.getValue() != null) {
             costume.setCategoryId(categoryComboBox.getValue().getId());
@@ -135,6 +145,15 @@ public class CostumeDialogController {
                 new BigDecimal(priceField.getText());
             } catch (NumberFormatException e) {
                 errorMessage += "Ціна повинна бути числом!\n";
+            }
+        }
+        if (depositField.getText() == null || depositField.getText().isEmpty()) {
+            errorMessage += "Некоректна застава!\n";
+        } else {
+            try {
+                new BigDecimal(depositField.getText());
+            } catch (NumberFormatException e) {
+                errorMessage += "Застава повинна бути числом!\n";
             }
         }
         if (categoryComboBox.getValue() == null) {

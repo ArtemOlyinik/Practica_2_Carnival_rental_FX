@@ -18,5 +18,6 @@ public class Rental {
     private LocalDate startDate;
     private LocalDate endDate;
     private BigDecimal totalPrice;
+    private BigDecimal penaltyAmount;
     private String status;
 }

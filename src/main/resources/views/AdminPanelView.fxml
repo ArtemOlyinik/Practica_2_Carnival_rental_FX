@@ -8,6 +8,26 @@
     <Label style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Панель Адміністратора" />
     
     <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <Tab fx:id="dashboardTab" text="Дашборд">
+            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+                <VBox spacing="30" style="-fx-padding: 30;">
+                    <Label style="-fx-font-size: 20; -fx-font-weight: bold;" text="Аналітика прокату" />
+                    <HBox spacing="30" alignment="CENTER">
+                         <VBox spacing="10" styleClass="card" style="-fx-padding: 20; -fx-background-color: -color-bg-subtle; -fx-border-color: -color-border-default; -fx-border-radius: 10;" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Статуси замовлень" />
+                            <javafx.scene.chart.PieChart fx:id="statusChart" />
+                         </VBox>
+                         <VBox spacing="10" styleClass="card" style="-fx-padding: 20; -fx-background-color: -color-bg-subtle; -fx-border-color: -color-border-default; -fx-border-radius: 10;" HBox.hgrow="ALWAYS">
+                            <Label style="-fx-font-weight: bold;" text="Топ-5 популярних костюмів" />
+                            <javafx.scene.chart.BarChart fx:id="popularityChart">
+                                <xAxis><javafx.scene.chart.CategoryAxis label="Костюм" /></xAxis>
+                                <yAxis><javafx.scene.chart.NumberAxis label="Кількість оренд" /></yAxis>
+                            </javafx.scene.chart.BarChart>
+                         </VBox>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+        </Tab>
         <Tab text="Костюми">
             <VBox spacing="10" style="-fx-padding: 20;">
                 <HBox spacing="10" alignment="CENTER_LEFT">

@@ -56,7 +56,13 @@ public class RentalService {
         long days = ChronoUnit.DAYS.between(startDate, endDate);
         if (days == 0) days = 1;
 
-        BigDecimal totalPrice = calculateTotalPrice(costumes, days);
+        // Використання нової логіки розрахунку з BasketService (Блок 2)
+        BasketService basketService = BasketService.getInstance();
+        BigDecimal rentalPrice = basketService.calculateRentalTotal(days);
+        BigDecimal totalDeposit = basketService.calculateTotalDeposit();
+
+        // Загальна сума до сплати при оформленні
+        BigDecimal finalPrice = rentalPrice.add(totalDeposit);
 
         Rental rental =
                 Rental.builder()
@@ -64,8 +70,9 @@ public class RentalService {
                         .userId(user.getId())
                         .startDate(startDate)
                         .endDate(endDate)
-                        .totalPrice(totalPrice)
-                        .status("ACTIVE")
+                        .totalPrice(finalPrice)
+                        .penaltyAmount(BigDecimal.ZERO)
+                        .status("RESERVED") // Початковий статус за новою схемою
                         .build();
 
         // 2. Виконання транзакції (Вимога розділу 3.4 - чистий JDBC)
@@ -90,11 +97,43 @@ public class RentalService {
             } catch (Exception e) {
                 conn.rollback(); // Відкат транзакції у разі помилки
                 throw new RuntimeException(
-                        "Помилка при оформленні оренди. Транзакцію скасовано.", e);
+                        "Помилка при оформленні оренди. Тразакцію скасовано.", e);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Помилка з'єднання з базою даних", e);
         }
+    }
+
+    public BigDecimal calculatePenalty(Rental rental, List<Costume> costumes) {
+        if (rental.getEndDate().isAfter(LocalDate.now())) {
+            return BigDecimal.ZERO;
+        }
+
+        long overdueDays = ChronoUnit.DAYS.between(rental.getEndDate(), LocalDate.now());
+        if (overdueDays <= 0) return BigDecimal.ZERO;
+
+        BigDecimal dailyRate = BigDecimal.ZERO;
+        for (Costume c : costumes) {
+            dailyRate = dailyRate.add(c.getPricePerDay());
+        }
+
+        return dailyRate.multiply(BigDecimal.valueOf(overdueDays));
+    }
+
+    /** Оновлення статусу оренди з перевіркою прострочки. */
+    public void updateRentalStatus(Rental rental, String newStatus, List<Costume> costumes) {
+        if ("RETURNED".equals(newStatus)) {
+            BigDecimal penalty = calculatePenalty(rental, costumes);
+            rental.setPenaltyAmount(penalty);
+        }
+
+        // Автоматичне переведення в OVERDUE, якщо дата пройшла і статус не RETURNED
+        if (!"RETURNED".equals(newStatus) && rental.getEndDate().isBefore(LocalDate.now())) {
+            newStatus = "OVERDUE";
+        }
+
+        rental.setStatus(newStatus);
+        rentalRepository.update(rental);
     }
 
     private void validateRentalDates(LocalDate start, LocalDate end) {
@@ -108,13 +147,5 @@ public class RentalService {
             throw new IllegalArgumentException(
                     "Дата початку не може бути пізніше дати завершення.");
         }
-    }
-
-    private BigDecimal calculateTotalPrice(List<Costume> costumes, long days) {
-        BigDecimal total = BigDecimal.ZERO;
-        for (Costume costume : costumes) {
-            total = total.add(costume.getPricePerDay().multiply(BigDecimal.valueOf(days)));
-        }
-        return total;
     }
 }

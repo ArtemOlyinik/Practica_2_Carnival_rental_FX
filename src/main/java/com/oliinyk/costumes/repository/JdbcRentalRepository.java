@@ -26,14 +26,15 @@ public class JdbcRentalRepository implements RentalRepository {
     @Override
     public void save(Rental rental, Connection conn) {
         String sql =
-                "INSERT INTO rentals (id, user_id, start_date, end_date, total_price, status) VALUES (?, ?, ?, ?, ?, ?)";
+                "INSERT INTO rentals (id, user_id, start_date, end_date, total_price, penalty_amount, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, rental.getId());
             stmt.setObject(2, rental.getUserId());
             stmt.setObject(3, java.sql.Date.valueOf(rental.getStartDate()));
             stmt.setObject(4, java.sql.Date.valueOf(rental.getEndDate()));
             stmt.setBigDecimal(5, rental.getTotalPrice());
-            stmt.setString(6, rental.getStatus());
+            stmt.setBigDecimal(6, rental.getPenaltyAmount());
+            stmt.setString(7, rental.getStatus());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Помилка при збереженні оренди в транзакції", e);
@@ -94,15 +95,16 @@ public class JdbcRentalRepository implements RentalRepository {
     @Override
     public void update(Rental rental) {
         String sql =
-                "UPDATE rentals SET user_id = ?, start_date = ?, end_date = ?, total_price = ?, status = ? WHERE id = ?";
+                "UPDATE rentals SET user_id = ?, start_date = ?, end_date = ?, total_price = ?, penalty_amount = ?, status = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, rental.getUserId());
             stmt.setObject(2, java.sql.Date.valueOf(rental.getStartDate()));
             stmt.setObject(3, java.sql.Date.valueOf(rental.getEndDate()));
             stmt.setBigDecimal(4, rental.getTotalPrice());
-            stmt.setString(5, rental.getStatus());
-            stmt.setObject(6, rental.getId());
+            stmt.setBigDecimal(5, rental.getPenaltyAmount());
+            stmt.setString(6, rental.getStatus());
+            stmt.setObject(7, rental.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Помилка при оновленні оренди", e);
@@ -122,17 +124,19 @@ public class JdbcRentalRepository implements RentalRepository {
     }
 
     @Override
-    public boolean isCostumeAvailable(UUID costumeId, java.time.LocalDate start, java.time.LocalDate end) {
+    public boolean isCostumeAvailable(
+            UUID costumeId, java.time.LocalDate start, java.time.LocalDate end) {
         // Умова перетину періодів [A, B] та [C, D]: A <= D AND B >= C
+        // Критичний баг 1: Костюм зайнятий, якщо статус ACTIVE, RESERVED, ISSUED або OVERDUE (Вимога стабільності)
         String sql =
                 "SELECT COUNT(*) FROM rentals r "
                         + "JOIN rental_items ri ON r.id = ri.rental_id "
-                        + "WHERE ri.costume_id = ? AND r.status = 'ACTIVE' "
+                        + "WHERE ri.costume_id = ? AND r.status IN ('ACTIVE', 'RESERVED', 'ISSUED', 'OVERDUE') "
                         + "AND r.start_date <= ? AND r.end_date >= ?";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, costumeId);
-            stmt.setObject(2, java.sql.Date.valueOf(end));   // r.start_date <= end
+            stmt.setObject(2, java.sql.Date.valueOf(end)); // r.start_date <= end
             stmt.setObject(3, java.sql.Date.valueOf(start)); // r.end_date >= start
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -152,6 +156,7 @@ public class JdbcRentalRepository implements RentalRepository {
                 .startDate(rs.getDate("start_date").toLocalDate())
                 .endDate(rs.getDate("end_date").toLocalDate())
                 .totalPrice(rs.getBigDecimal("total_price"))
+                .penaltyAmount(rs.getBigDecimal("penalty_amount"))
                 .status(rs.getString("status"))
                 .build();
     }

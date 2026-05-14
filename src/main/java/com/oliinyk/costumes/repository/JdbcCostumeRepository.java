@@ -17,7 +17,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
     @Override
     public void save(Costume costume) {
         String sql =
-                "INSERT INTO costumes (id, category_id, name, description, price_per_day, image_path) VALUES (?, ?, ?, ?, ?, ?)";
+                "INSERT INTO costumes (id, category_id, name, description, price_per_day, image_path, deposit_amount) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, costume.getId());
@@ -26,6 +26,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
             stmt.setString(4, costume.getDescription());
             stmt.setBigDecimal(5, costume.getPricePerDay());
             stmt.setString(6, costume.getImagePath());
+            stmt.setBigDecimal(7, costume.getDepositAmount());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Помилка при збереженні костюма", e);
@@ -68,7 +69,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
     @Override
     public void update(Costume costume) {
         String sql =
-                "UPDATE costumes SET category_id = ?, name = ?, description = ?, price_per_day = ?, image_path = ? WHERE id = ?";
+                "UPDATE costumes SET category_id = ?, name = ?, description = ?, price_per_day = ?, image_path = ?, deposit_amount = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, costume.getCategoryId());
@@ -76,7 +77,8 @@ public class JdbcCostumeRepository implements CostumeRepository {
             stmt.setString(3, costume.getDescription());
             stmt.setBigDecimal(4, costume.getPricePerDay());
             stmt.setString(5, costume.getImagePath());
-            stmt.setObject(6, costume.getId());
+            stmt.setBigDecimal(6, costume.getDepositAmount());
+            stmt.setObject(7, costume.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Помилка при оновленні костюма", e);
@@ -103,6 +105,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
                 .description(rs.getString("description"))
                 .pricePerDay(rs.getBigDecimal("price_per_day"))
                 .imagePath(rs.getString("image_path"))
+                .depositAmount(rs.getBigDecimal("deposit_amount"))
                 .build();
     }
 }

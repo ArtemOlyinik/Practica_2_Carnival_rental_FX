@@ -19,11 +19,14 @@
         <Label text="Ціна (грн/день):" GridPane.columnIndex="0" GridPane.rowIndex="2" />
         <TextField fx:id="priceField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
         
-        <Label text="Категорія:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-        <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+        <Label text="Застава (грн):" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <TextField fx:id="depositField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
         
-        <Label text="Шлях до фото:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-        <TextField fx:id="imagePathField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        <Label text="Категорія:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+        <ComboBox fx:id="categoryComboBox" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+        
+        <Label text="Шлях до фото:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+        <TextField fx:id="imagePathField" GridPane.columnIndex="1" GridPane.rowIndex="5" />
     </GridPane>
     
     <HBox spacing="10" alignment="CENTER_RIGHT">
