@@ -26,6 +26,11 @@
                     <FontIcon iconLiteral="fas-shopping-cart" />
                 </graphic>
             </Button>
+            <Button fx:id="btnMyRentals" text="Мої Оренди" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showMyRentals" styleClass="flat">
+                <graphic>
+                    <FontIcon iconLiteral="fas-history" />
+                </graphic>
+            </Button>
             <Button fx:id="btnAdmin" text="Адмін Панель" maxWidth="Infinity" alignment="BASELINE_LEFT" onAction="#showAdminPanel" styleClass="flat">
                 <graphic>
                     <FontIcon iconLiteral="fas-user-shield" />

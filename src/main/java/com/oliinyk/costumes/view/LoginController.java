@@ -1,8 +1,6 @@
 package com.oliinyk.costumes.view;
 
 import atlantafx.base.theme.PrimerLight;
-import com.oliinyk.costumes.viewmodel.CatalogViewModel;
-import com.oliinyk.costumes.viewmodel.LoginViewModel;
 import java.net.URL;
 import javafx.application.Application;
 import javafx.fxml.FXML;
@@ -26,10 +24,10 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        authService = new com.oliinyk.costumes.service.AuthService(
-            new com.oliinyk.costumes.repository.JdbcUserRepository(),
-            new com.oliinyk.costumes.service.ConsoleEmailServiceImpl()
-        );
+        authService =
+                new com.oliinyk.costumes.service.AuthService(
+                        new com.oliinyk.costumes.repository.JdbcUserRepository(),
+                        new com.oliinyk.costumes.service.ConsoleEmailServiceImpl());
         loginButton.setOnAction(e -> handleLogin());
     }
 
@@ -42,26 +40,36 @@ public class LoginController {
             return;
         }
 
-        java.util.Optional<com.oliinyk.costumes.model.User> userOpt = authService.login(email, password);
+        try {
+            java.util.Optional<com.oliinyk.costumes.model.User> userOpt =
+                    authService.login(email, password);
 
-        if (userOpt.isPresent()) {
-            com.oliinyk.costumes.model.User user = userOpt.get();
-            if (!user.isVerified()) {
-                errorLabel.setText("Акаунт не верифіковано.");
-                return;
+            if (userOpt.isPresent()) {
+                com.oliinyk.costumes.model.User user = userOpt.get();
+                if (!user.isVerified()) {
+                    errorLabel.setText("Акаунт не верифіковано.");
+                    return;
+                }
+                com.oliinyk.costumes.service.SessionManager.getInstance().login(user);
+                errorLabel.setText("");
+                navigateToCatalog();
+            } else {
+                errorLabel.setText("Невірний email або пароль.");
             }
-            com.oliinyk.costumes.service.SessionManager.getInstance().login(user);
-            errorLabel.setText("");
-            navigateToCatalog();
-        } else {
-            errorLabel.setText("Невірний email або пароль.");
+        } catch (RuntimeException ex) {
+            errorLabel.setText(ex.getMessage());
+            javafx.scene.control.Alert alert =
+                    new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+            alert.setTitle("Помилка входу");
+            alert.setHeaderText(null);
+            alert.setContentText(ex.getMessage());
+            alert.showAndWait();
         }
     }
 
     private void navigateToCatalog() {
         try {
-            URL fxmlLocation =
-                    getClass().getResource("/views/MainView.fxml");
+            URL fxmlLocation = getClass().getResource("/views/MainView.fxml");
             if (fxmlLocation == null) {
                 throw new IllegalStateException("Не знайдено /views/MainView.fxml");
             }
@@ -82,6 +90,7 @@ public class LoginController {
             errorLabel.setText("Помилка відкриття каталогу: " + e.getMessage());
         }
     }
+
     @FXML
     private void navigateToRegister() {
         try {

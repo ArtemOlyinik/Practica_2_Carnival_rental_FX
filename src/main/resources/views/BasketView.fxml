@@ -34,7 +34,7 @@
             
             <Region VBox.vgrow="ALWAYS" />
             
-            <Button text="Орендувати" styleClass="success" maxWidth="Infinity" prefHeight="40">
+            <Button onAction="#onRentClicked" text="Орендувати" styleClass="success" maxWidth="Infinity" prefHeight="40">
                 <graphic>
                     <FontIcon iconLiteral="fas-check" iconColor="white" />
                 </graphic>

@@ -15,29 +15,42 @@ public class MainController {
 
     // Створюємо загальний ViewModel для каталогу, щоб не втрачати стан при перемиканні
     @FXML private javafx.scene.control.Button btnAdmin;
+    @FXML private javafx.scene.control.Button btnMyRentals;
 
     private CatalogViewModel catalogViewModel = new CatalogViewModel();
 
     @FXML
     public void initialize() {
-        // Ховаємо кнопку "Адмін Панель", якщо користувач не ADMIN
-        com.oliinyk.costumes.model.User user = com.oliinyk.costumes.service.SessionManager.getInstance().getCurrentUser();
-        if (user == null || !"ADMIN".equals(user.getRole())) {
-            btnAdmin.setVisible(false);
-            btnAdmin.setManaged(false);
-        }
+        // Ховаємо кнопки залежно від ролі (Вимога розділу 2.2)
+        com.oliinyk.costumes.model.User user =
+                com.oliinyk.costumes.service.SessionManager.getInstance().getCurrentUser();
         
+        boolean isAdmin = user != null && "ADMIN".equals(user.getRole());
+        
+        btnAdmin.setVisible(isAdmin);
+        btnAdmin.setManaged(isAdmin);
+        
+        // "Мої оренди" доступні тільки звичайним користувачам (або всім, крім адміна)
+        btnMyRentals.setVisible(!isAdmin);
+        btnMyRentals.setManaged(!isAdmin);
+
         showCatalog(); // Відкриваємо каталог при старті
     }
 
     @FXML
     private void showCatalog() {
+        catalogViewModel.loadFromDatabase(); // Оновлюємо дані перед показом
         loadView("/views/CatalogView.fxml", catalogViewModel);
     }
 
     @FXML
     private void showBasket() {
         loadView("/views/BasketView.fxml", null);
+    }
+
+    @FXML
+    private void showMyRentals() {
+        loadView("/views/MyRentalsView.fxml", null);
     }
 
     @FXML
@@ -65,13 +78,13 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Node view = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller instanceof CatalogController) {
                 ((CatalogController) controller).setViewModel((CatalogViewModel) viewModel);
             }
             // TODO: додати if для BasketController та SettingsController
-            
+
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             e.printStackTrace();

@@ -12,12 +12,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/** JDBC реалізація репозиторію користувачів. */
 public class JdbcUserRepository implements UserRepository {
 
     @Override
     public void save(User user) {
         String sql =
-                "INSERT INTO users (id, email, password_hash, role, verification_code, is_verified, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "INSERT INTO users (id, email, password_hash, role, verification_code, is_verified, is_blocked, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, user.getId());
@@ -26,14 +27,15 @@ public class JdbcUserRepository implements UserRepository {
             stmt.setString(4, user.getRole());
             stmt.setString(5, user.getVerificationCode());
             stmt.setBoolean(6, user.isVerified());
+            stmt.setBoolean(7, user.isBlocked());
             stmt.setTimestamp(
-                    7,
+                    8,
                     user.getCreatedAt() != null
                             ? Timestamp.valueOf(user.getCreatedAt())
                             : new Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error saving user", e);
+            throw new RuntimeException("Помилка при збереженні користувача", e);
         }
     }
 
@@ -49,7 +51,7 @@ public class JdbcUserRepository implements UserRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by id", e);
+            throw new RuntimeException("Помилка при пошуку користувача за ID", e);
         }
         return Optional.empty();
     }
@@ -66,7 +68,7 @@ public class JdbcUserRepository implements UserRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding user by email", e);
+            throw new RuntimeException("Помилка при пошуку користувача за email", e);
         }
         return Optional.empty();
     }
@@ -82,7 +84,7 @@ public class JdbcUserRepository implements UserRepository {
                 users.add(mapResultSetToUser(rs));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding all users", e);
+            throw new RuntimeException("Помилка при отриманні всіх користувачів", e);
         }
         return users;
     }
@@ -90,7 +92,7 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public void update(User user) {
         String sql =
-                "UPDATE users SET email = ?, password_hash = ?, role = ?, verification_code = ?, is_verified = ? WHERE id = ?";
+                "UPDATE users SET email = ?, password_hash = ?, role = ?, verification_code = ?, is_verified = ?, is_blocked = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, user.getEmail());
@@ -98,10 +100,11 @@ public class JdbcUserRepository implements UserRepository {
             stmt.setString(3, user.getRole());
             stmt.setString(4, user.getVerificationCode());
             stmt.setBoolean(5, user.isVerified());
-            stmt.setObject(6, user.getId());
+            stmt.setBoolean(6, user.isBlocked());
+            stmt.setObject(7, user.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error updating user", e);
+            throw new RuntimeException("Помилка при оновленні користувача", e);
         }
     }
 
@@ -113,7 +116,7 @@ public class JdbcUserRepository implements UserRepository {
             stmt.setObject(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error deleting user", e);
+            throw new RuntimeException("Помилка при видаленні користувача", e);
         }
     }
 
@@ -125,6 +128,7 @@ public class JdbcUserRepository implements UserRepository {
                 .role(rs.getString("role"))
                 .verificationCode(rs.getString("verification_code"))
                 .isVerified(rs.getBoolean("is_verified"))
+                .isBlocked(rs.getBoolean("is_blocked"))
                 .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
                 .build();
     }

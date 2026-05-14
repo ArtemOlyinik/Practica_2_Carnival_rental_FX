@@ -18,5 +18,6 @@ public class User {
     private String role;
     private String verificationCode;
     private boolean isVerified;
+    private boolean isBlocked;
     private LocalDateTime createdAt;
 }

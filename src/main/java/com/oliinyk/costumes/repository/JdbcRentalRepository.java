@@ -1,0 +1,158 @@
+package com.oliinyk.costumes.repository;
+
+import com.oliinyk.costumes.infrastructure.DatabaseManager;
+import com.oliinyk.costumes.model.Rental;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/** JDBC реалізація репозиторію оренди. Підтримує транзакційність. */
+public class JdbcRentalRepository implements RentalRepository {
+
+    @Override
+    public void save(Rental rental) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            save(rental, conn);
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при збереженні оренди", e);
+        }
+    }
+
+    @Override
+    public void save(Rental rental, Connection conn) {
+        String sql =
+                "INSERT INTO rentals (id, user_id, start_date, end_date, total_price, status) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, rental.getId());
+            stmt.setObject(2, rental.getUserId());
+            stmt.setObject(3, java.sql.Date.valueOf(rental.getStartDate()));
+            stmt.setObject(4, java.sql.Date.valueOf(rental.getEndDate()));
+            stmt.setBigDecimal(5, rental.getTotalPrice());
+            stmt.setString(6, rental.getStatus());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при збереженні оренди в транзакції", e);
+        }
+    }
+
+    @Override
+    public Optional<Rental> findById(UUID id) {
+        String sql = "SELECT * FROM rentals WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapResultSetToRental(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при пошуку оренди за ID", e);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Rental> findAll() {
+        String sql = "SELECT * FROM rentals";
+        List<Rental> rentals = new ArrayList<>();
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                rentals.add(mapResultSetToRental(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при отриманні всіх оренд", e);
+        }
+        return rentals;
+    }
+
+    @Override
+    public List<Rental> findByUserId(UUID userId) {
+        String sql = "SELECT * FROM rentals WHERE user_id = ?";
+        List<Rental> rentals = new ArrayList<>();
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    rentals.add(mapResultSetToRental(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при пошуку оренд користувача", e);
+        }
+        return rentals;
+    }
+
+    @Override
+    public void update(Rental rental) {
+        String sql =
+                "UPDATE rentals SET user_id = ?, start_date = ?, end_date = ?, total_price = ?, status = ? WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, rental.getUserId());
+            stmt.setObject(2, java.sql.Date.valueOf(rental.getStartDate()));
+            stmt.setObject(3, java.sql.Date.valueOf(rental.getEndDate()));
+            stmt.setBigDecimal(4, rental.getTotalPrice());
+            stmt.setString(5, rental.getStatus());
+            stmt.setObject(6, rental.getId());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при оновленні оренди", e);
+        }
+    }
+
+    @Override
+    public void delete(UUID id) {
+        String sql = "DELETE FROM rentals WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при видаленні оренди", e);
+        }
+    }
+
+    @Override
+    public boolean isCostumeAvailable(UUID costumeId, java.time.LocalDate start, java.time.LocalDate end) {
+        // Умова перетину періодів [A, B] та [C, D]: A <= D AND B >= C
+        String sql =
+                "SELECT COUNT(*) FROM rentals r "
+                        + "JOIN rental_items ri ON r.id = ri.rental_id "
+                        + "WHERE ri.costume_id = ? AND r.status = 'ACTIVE' "
+                        + "AND r.start_date <= ? AND r.end_date >= ?";
+        try (Connection conn = DatabaseManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, costumeId);
+            stmt.setObject(2, java.sql.Date.valueOf(end));   // r.start_date <= end
+            stmt.setObject(3, java.sql.Date.valueOf(start)); // r.end_date >= start
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) == 0;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Помилка при перевірці доступності костюма", e);
+        }
+        return false;
+    }
+
+    private Rental mapResultSetToRental(ResultSet rs) throws SQLException {
+        return Rental.builder()
+                .id(rs.getObject("id", UUID.class))
+                .userId(rs.getObject("user_id", UUID.class))
+                .startDate(rs.getDate("start_date").toLocalDate())
+                .endDate(rs.getDate("end_date").toLocalDate())
+                .totalPrice(rs.getBigDecimal("total_price"))
+                .status(rs.getString("status"))
+                .build();
+    }
+}

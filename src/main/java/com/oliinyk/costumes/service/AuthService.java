@@ -54,6 +54,9 @@ public class AuthService {
             User user = userOpt.get();
             // Перевірка відповідності введеного пароля хешу з БД
             if (BCrypt.checkpw(rawPassword, user.getPasswordHash())) {
+                if (user.isBlocked()) {
+                    throw new RuntimeException("Ваш акаунт заблоковано адміністратором.");
+                }
                 return Optional.of(user);
             }
         }
@@ -64,7 +67,7 @@ public class AuthService {
     // Підтвердження пошти користувача за допомогою коду
     public boolean verifyUser(String email, String code) {
         Optional<User> userOpt = userRepository.findByEmail(email);
-        
+
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (!user.isVerified() && code.equals(user.getVerificationCode())) {

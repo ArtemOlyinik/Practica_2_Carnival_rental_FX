@@ -49,7 +49,8 @@ public class LoginViewModel {
                                 errorMessage.set("Акаунт не верифіковано.");
                                 loginSuccessful.set(false);
                             } else {
-                                com.oliinyk.costumes.service.SessionManager.getInstance().login(user);
+                                com.oliinyk.costumes.service.SessionManager.getInstance()
+                                        .login(user);
                                 errorMessage.set("");
                                 loginSuccessful.set(true);
                             }

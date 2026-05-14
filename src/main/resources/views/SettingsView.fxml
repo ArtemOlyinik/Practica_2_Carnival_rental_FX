@@ -20,9 +20,8 @@
         <Separator />
         <HBox spacing="15" alignment="CENTER_LEFT">
             <Label text="Режим каталогу:" style="-fx-font-size: 14;" />
-            <ToggleButton text="Сітка (Grid)" selected="true" disable="true" />
-            <ToggleButton text="Список (List)" disable="true" />
-            <Label text="(В розробці)" style="-fx-text-fill: -color-fg-muted;" />
+            <ToggleButton fx:id="gridToggle" text="Сітка (Grid)" onAction="#onGridViewSelected" />
+            <ToggleButton fx:id="listToggle" text="Список (List)" onAction="#onListViewSelected" />
         </HBox>
     </VBox>
 </VBox>

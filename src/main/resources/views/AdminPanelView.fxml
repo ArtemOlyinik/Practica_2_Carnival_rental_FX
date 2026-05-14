@@ -11,13 +11,13 @@
         <Tab text="Костюми">
             <VBox spacing="10" style="-fx-padding: 20;">
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Button text="Додати Новий Костюм" styleClass="success">
+                    <Button text="Додати Новий Костюм" styleClass="success" onAction="#onAddCostumeClicked">
                         <graphic>
                             <FontIcon iconLiteral="fas-plus" iconColor="white" />
                         </graphic>
                     </Button>
                     <Region HBox.hgrow="ALWAYS" />
-                    <TextField promptText="Пошук костюмів..." />
+                    <TextField fx:id="costumeSearchField" promptText="Пошук костюмів..." />
                 </HBox>
                 <TableView fx:id="costumesTable" VBox.vgrow="ALWAYS">
                     <columns>

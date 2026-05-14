@@ -6,7 +6,23 @@
 
 <VBox spacing="20.0" style="-fx-padding: 30; -fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oliinyk.costumes.view.CatalogController">
     <HBox alignment="CENTER_LEFT" spacing="20.0">
-        <Label style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Каталог Карнавальних Костюмів" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        <Label style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Каталог Костюмів" />
+        <Region HBox.hgrow="ALWAYS" />
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Період:" />
+            <DatePicker fx:id="startDatePicker" prefWidth="130" />
+            <DatePicker fx:id="endDatePicker" prefWidth="130" />
+        </HBox>
+        <Separator orientation="VERTICAL" />
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Button fx:id="gridModeBtn" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fas-th" /></graphic>
+            </Button>
+            <Button fx:id="listModeBtn" styleClass="button-icon">
+                <graphic><FontIcon iconLiteral="fas-list" /></graphic>
+            </Button>
+        </HBox>
+        <TextField fx:id="searchField" promptText="Пошук..." prefWidth="200" />
     </HBox>
     
     <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS" styleClass="edge-to-edge">

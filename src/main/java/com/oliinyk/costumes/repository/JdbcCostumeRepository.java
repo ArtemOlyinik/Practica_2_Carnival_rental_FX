@@ -11,13 +11,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/** JDBC реалізація репозиторію костюмів. */
 public class JdbcCostumeRepository implements CostumeRepository {
 
     @Override
     public void save(Costume costume) {
-        String sql = "INSERT INTO costumes (id, category_id, name, description, price_per_day, image_path) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql =
+                "INSERT INTO costumes (id, category_id, name, description, price_per_day, image_path) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, costume.getId());
             stmt.setObject(2, costume.getCategoryId());
             stmt.setString(3, costume.getName());
@@ -26,7 +28,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
             stmt.setString(6, costume.getImagePath());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error saving costume", e);
+            throw new RuntimeException("Помилка при збереженні костюма", e);
         }
     }
 
@@ -34,7 +36,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
     public Optional<Costume> findById(UUID id) {
         String sql = "SELECT * FROM costumes WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -42,7 +44,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding costume", e);
+            throw new RuntimeException("Помилка при пошуку костюма за ID", e);
         }
         return Optional.empty();
     }
@@ -52,22 +54,23 @@ public class JdbcCostumeRepository implements CostumeRepository {
         String sql = "SELECT * FROM costumes";
         List<Costume> costumes = new ArrayList<>();
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 costumes.add(mapResultSetToCostume(rs));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error finding all costumes", e);
+            throw new RuntimeException("Помилка при отриманні всіх костюмів", e);
         }
         return costumes;
     }
 
     @Override
     public void update(Costume costume) {
-        String sql = "UPDATE costumes SET category_id = ?, name = ?, description = ?, price_per_day = ?, image_path = ? WHERE id = ?";
+        String sql =
+                "UPDATE costumes SET category_id = ?, name = ?, description = ?, price_per_day = ?, image_path = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, costume.getCategoryId());
             stmt.setString(2, costume.getName());
             stmt.setString(3, costume.getDescription());
@@ -76,7 +79,7 @@ public class JdbcCostumeRepository implements CostumeRepository {
             stmt.setObject(6, costume.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error updating costume", e);
+            throw new RuntimeException("Помилка при оновленні костюма", e);
         }
     }
 
@@ -84,11 +87,11 @@ public class JdbcCostumeRepository implements CostumeRepository {
     public void delete(UUID id) {
         String sql = "DELETE FROM costumes WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setObject(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error deleting costume", e);
+            throw new RuntimeException("Помилка при видаленні костюма", e);
         }
     }
 

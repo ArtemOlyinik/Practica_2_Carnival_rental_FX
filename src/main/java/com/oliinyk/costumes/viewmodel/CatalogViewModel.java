@@ -1,14 +1,13 @@
 package com.oliinyk.costumes.viewmodel;
 
 import com.oliinyk.costumes.model.Costume;
-import java.math.BigDecimal;
+import com.oliinyk.costumes.service.BasketService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import com.oliinyk.costumes.service.BasketService;
 
 public class CatalogViewModel {
 
@@ -43,8 +42,9 @@ public class CatalogViewModel {
         cartButtonText.set("Кошик (" + cartCount + ")");
     }
 
-    private void loadFromDatabase() {
-        com.oliinyk.costumes.repository.CostumeRepository repo = new com.oliinyk.costumes.repository.JdbcCostumeRepository();
+    public void loadFromDatabase() {
+        com.oliinyk.costumes.repository.CostumeRepository repo =
+                new com.oliinyk.costumes.repository.JdbcCostumeRepository();
         costumes.setAll(repo.findAll());
     }
 }

@@ -58,7 +58,7 @@ public class RegisterController {
     private void handleVerify() {
         String email = emailField.getText();
         String code = codeField.getText();
-        
+
         if (authService.verifyUser(email, code)) {
             errorLabel.setStyle("-fx-text-fill: -color-success-fg;");
             errorLabel.setText("Успішно! Тепер увійдіть.");
@@ -68,7 +68,7 @@ public class RegisterController {
             Button backBtn = new Button("Повернутися до входу");
             backBtn.setOnAction(e -> navigateBack());
             backBtn.getStyleClass().add("accent");
-            ((VBox)errorLabel.getParent()).getChildren().add(backBtn);
+            ((VBox) errorLabel.getParent()).getChildren().add(backBtn);
         } else {
             errorLabel.setStyle("-fx-text-fill: -color-danger-fg;");
             errorLabel.setText("Невірний код.");
