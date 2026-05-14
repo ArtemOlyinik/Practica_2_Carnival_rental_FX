@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="20.0" style="-fx-padding: 30; -fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oliinyk.costumes.view.CatalogController">
+    <HBox alignment="CENTER_LEFT" spacing="20.0">
+        <Label style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Каталог Карнавальних Костюмів" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+    </HBox>
+    
+    <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS" styleClass="edge-to-edge">
+        <TilePane fx:id="costumesGrid" hgap="20" vgap="20" prefColumns="3" alignment="TOP_CENTER" style="-fx-padding: 10;" />
+    </ScrollPane>
+</VBox>

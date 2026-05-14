@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<VBox spacing="20.0" style="-fx-padding: 30; -fx-background-color: -color-bg-default;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.oliinyk.costumes.view.AdminPanelController">
+    <Label style="-fx-font-size: 28; -fx-font-weight: bold; -fx-text-fill: -color-fg-default;" text="Панель Адміністратора" />
+    
+    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <Tab text="Костюми">
+            <VBox spacing="10" style="-fx-padding: 20;">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="Додати Новий Костюм" styleClass="success">
+                        <graphic>
+                            <FontIcon iconLiteral="fas-plus" iconColor="white" />
+                        </graphic>
+                    </Button>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <TextField promptText="Пошук костюмів..." />
+                </HBox>
+                <TableView fx:id="costumesTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn text="Назва" prefWidth="200" />
+                        <TableColumn text="Опис" prefWidth="300" />
+                        <TableColumn text="Ціна (грн/день)" prefWidth="150" />
+                        <TableColumn text="Дії" prefWidth="150" />
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+        
+        <Tab text="Користувачі">
+            <VBox spacing="10" style="-fx-padding: 20;">
+                <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn text="Email" prefWidth="250" />
+                        <TableColumn text="Роль" prefWidth="150" />
+                        <TableColumn text="Верифікований" prefWidth="150" />
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+        
+        <Tab text="Оренди">
+            <VBox spacing="10" style="-fx-padding: 20;">
+                <TableView fx:id="rentalsTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn text="Користувач" prefWidth="200" />
+                        <TableColumn text="Дата Початку" prefWidth="150" />
+                        <TableColumn text="Дата Кінця" prefWidth="150" />
+                        <TableColumn text="Статус" prefWidth="150" />
+                        <TableColumn text="Сума" prefWidth="100" />
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+    </TabPane>
+</VBox>
